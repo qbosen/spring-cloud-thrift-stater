@@ -1,0 +1,2 @@
+top.abosen.thrift.server.annotation.EnableThriftServer=\
+  top.abosen.thrift.server.ThriftServerAutoConfiguration

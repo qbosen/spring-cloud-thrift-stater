@@ -1,0 +1,13 @@
+#!/bin/sh
+
+HEADER_MSG=`awk 'NR==1{print}' $1`
+
+if [[ $HEADER_MSG =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.*\))?:.*$ ]]
+then
+	echo "commit success!"
+else
+  echo "Error: the commit message is irregular"
+  echo "Error: type must be one of [feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert]"
+  echo "eg: feat(user): add the user login"
+	exit 1
+fi

@@ -1,0 +1,35 @@
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    implementation("org.apache.thrift:libthrift:$thriftVersion")
+}
+
+def thriftGenPath = "$buildDir/generated/sources/thrift/java/main" as String
+task genThrift(group: 'build') {
+    inputs.files(fileTree('src/main/thrift'))
+            .withPropertyName("thriftFiles")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    outputs.dir(thriftGenPath)
+            .withPropertyName("genThriftDir")
+    doLast {
+        exec {
+            workingDir "$project.projectDir"
+            commandLine 'thrift', '--gen', 'java', '-out', thriftGenPath, '-r', 'src/main/thrift/calculator.thrift'
+            logger.quiet('Generate thrift files...')
+            standardOutput = new ByteArrayOutputStream()
+            ext.output = {
+                return standardOutput.toString()
+            }
+        }
+    }
+}
+compileJava.dependsOn genThrift
+sourceSets.main.java.srcDirs += thriftGenPath
+idea.module.sourceDirs += file(thriftGenPath)
+jar { enabled = true }
+bootJar { enabled = false }

@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.spotbugs.snom:spotbugs-gradle-plugin:$spotbugsVersion"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springbootVersion"
+        classpath "io.spring.gradle:dependency-management-plugin:$springDependencyMgrVersion"
+    }
+}
+allprojects {
+    apply plugin: 'idea'
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: "org.springframework.boot"
+    apply plugin: "io.spring.dependency-management"
+
+    repositories {
+        maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
+        mavenCentral()
+    }
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    dependencies {
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        //test dependencies
+        testImplementation platform("org.junit:junit-bom:$junitVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter-api")
+        testImplementation('org.junit.jupiter:junit-jupiter-engine')
+        testImplementation("org.mockito:mockito-junit-jupiter:$mockitoJunitVersion")
+    }
+
+
+    configurations.all {
+        exclude group: "junit", module: "junit"
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    apply from: "${rootProject.rootDir}/gradle/spotbugs/spotbugs.gradle"
+    apply from: "${rootProject.rootDir}/gradle/checkstyle/checkstyle.gradle"
+    apply from: "${rootProject.rootDir}/gradle/git-hooks/git-hooks.gradle"
+}
+

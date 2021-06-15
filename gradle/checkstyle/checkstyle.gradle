@@ -1,0 +1,18 @@
+apply plugin: 'checkstyle'
+
+checkstyle {
+    sourceSets = [project.sourceSets.main]
+    maxWarnings = 0
+    ignoreFailures = false
+
+    toolVersion = '8.41'
+    configFile = file("${rootProject.rootDir}/gradle/checkstyle/checks.xml")
+    configProperties = [ "suppressionFile" : "${rootProject.rootDir}/gradle/checkstyle/suppressions.xml"]
+}
+
+//配置需要忽略的文件
+tasks.withType(Checkstyle) {
+
+}
+
+

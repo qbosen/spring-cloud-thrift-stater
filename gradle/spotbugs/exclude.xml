@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- https://spotbugs.readthedocs.io/en/stable/filter.html -->
+
+    <Not>
+        <Match>
+            <Source name=".*/build/.*"/>
+        </Match>
+    </Not>
+
+    <Match>
+        <Package name="top.abosen.thrift"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="URF_UNREAD_FIELD"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+</FindBugsFilter>

@@ -1,0 +1,2 @@
+# Spring cloud thrift starter
+
