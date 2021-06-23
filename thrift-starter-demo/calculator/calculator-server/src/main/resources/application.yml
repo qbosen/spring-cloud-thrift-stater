@@ -1,0 +1,12 @@
+server:
+  port: 8080
+  shutdown: graceful
+logging:
+  level:
+    top.abosen.thrift: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh,health,info

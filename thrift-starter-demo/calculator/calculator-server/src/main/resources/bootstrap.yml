@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: calculator-rest-server
+  cloud:
+    consul:
+      host: "${CONSUL_HOST:localhost}"
+      port: "${CONSUL_PORT:8500}"
+      discovery:
+        enabled: true
+        register: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${random.value}
+        tags:
+          - calculator
+          - http
+        health-check-path: /actuator/health
+        register-health-check: true
+        health-check-interval: 10s
+  thrift:
+    server:
+      id: calculator-thrift-server
+      mode: hsHa
+      port: 8081
+      discovery:
+        enabled: true
+        host: "${CONSUL_HOST:localhost}"
+        port: "${CONSUL_PORT:8500}"
+        health-check:
+          enabled: true
+          check-interval: 10

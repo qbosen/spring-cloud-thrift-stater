@@ -5,7 +5,7 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation("org.apache.thrift:libthrift:$thriftVersion")
+    api("org.apache.thrift:libthrift:$thriftVersion")
 }
 
 def thriftGenPath = "$buildDir/generated/sources/thrift/java/main" as String
