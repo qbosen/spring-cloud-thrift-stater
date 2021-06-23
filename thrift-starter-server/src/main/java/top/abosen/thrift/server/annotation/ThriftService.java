@@ -2,7 +2,7 @@ package top.abosen.thrift.server.annotation;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
-import top.abosen.thrift.server.Constants;
+import top.abosen.thrift.common.Constants;
 
 import java.lang.annotation.*;
 

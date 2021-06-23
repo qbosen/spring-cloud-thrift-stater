@@ -2,6 +2,7 @@ package top.abosen.thrift.server.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import top.abosen.thrift.common.ServiceMode;
 
 /**
  * @author qiubaisen
@@ -32,7 +33,7 @@ public class ThriftServerProperties {
      * threadedSelector: 线程池选择器模型
      * </p>
      */
-    String mode = ServerMode.DEFAULT;
+    ServiceMode mode = ServiceMode.DEFAULT;
     /**
      * 服务注册信息（默认不开启）
      */

@@ -1,4 +1,4 @@
-package top.abosen.thrift.server.utils;
+package top.abosen.thrift.common;
 
 import lombok.experimental.UtilityClass;
 
@@ -7,10 +7,10 @@ import java.util.function.Predicate;
 
 /**
  * @author qiubaisen
- * @date 2021/6/15
+ * @date 2021/6/23
  */
 @UtilityClass
-public class ClassUtils {
+public class Utils {
     public static Optional<Class<?>> findFirstInterface(Class<?> clazz, Predicate<Class<?>> predicate) {
         Class<?> current = clazz;
         while (current != null) {
@@ -24,4 +24,8 @@ public class ClassUtils {
         return Optional.empty();
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T cast(Object object) {
+        return (T) object;
+    }
 }

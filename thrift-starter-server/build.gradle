@@ -5,6 +5,7 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation(project(":thrift-starter-common"))
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.cloud:spring-cloud-commons")
     implementation("org.apache.commons:commons-lang3")

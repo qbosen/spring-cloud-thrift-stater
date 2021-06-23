@@ -4,4 +4,5 @@ include 'thrift-starter-server'
 include 'thrift-starter-demo:calculator:calculator-client'
 include 'thrift-starter-demo:calculator:calculator-iface'
 include 'thrift-starter-demo:calculator:calculator-server'
+include 'thrift-starter-common'
 

@@ -3,8 +3,8 @@ package top.abosen.thrift.server.wrapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import top.abosen.thrift.common.Utils;
 import top.abosen.thrift.server.annotation.ThriftService;
-import top.abosen.thrift.server.utils.ClassUtils;
 
 /**
  * thrift 服务包装类
@@ -48,7 +48,7 @@ public class ThriftServiceWrapper {
         }
 
         // todo support AsyncIface
-        Class<?> ifaceType = ClassUtils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
+        Class<?> ifaceType = Utils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
                 .orElseThrow(() -> new IllegalStateException("No thrift IFace found on service"));
         String signature = String.join("-", new String[]{serverId, serviceName, String.valueOf(version)});
         return new ThriftServiceWrapper(serviceName, signature, thriftService.getClass(), ifaceType, thriftService, version);

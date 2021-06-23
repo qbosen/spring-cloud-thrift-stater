@@ -1,0 +1,2 @@
+top.abosen.thrift.client.annotation.EnableThriftClient=\
+  top.abosen.thrift.client.ThriftClientAutoConfiguration
