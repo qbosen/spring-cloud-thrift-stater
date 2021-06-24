@@ -19,7 +19,8 @@ import java.util.Objects;
 public class ThriftServerConfigurationSelector extends SpringFactoryImportSelector<EnableThriftServer> {
     @Override
     protected boolean isEnabled() {
-        Environment environment = getEnvironment();
+        return true;
+       /* Environment environment = getEnvironment();
         String serviceName = environment.getProperty(Constants.SERVER_SERVICE_NAME, String.class);
         ServiceMode serviceMode = environment.getProperty(Constants.SERVER_SERVICE_MODE, ServiceMode.class);
         Integer servicePort = getEnvironment().getProperty(Constants.SERVER_SERVICE_PORT, Integer.class);
@@ -32,6 +33,6 @@ public class ThriftServerConfigurationSelector extends SpringFactoryImportSelect
             log.info("Enable thrift server auto configuration, service name [{}], service model [{}], service port [{}]",
                     serviceName, serviceMode, servicePort);
         }
-        return enableAutoConfiguration;
+        return enableAutoConfiguration;*/
     }
 }

@@ -17,16 +17,6 @@ import top.abosen.thrift.common.ServiceMode;
 public class ThriftClientConfigurationSelector extends SpringFactoryImportSelector<EnableThriftClient> {
     @Override
     protected boolean isEnabled() {
-        Environment environment = getEnvironment();
-        String serviceName = environment.getProperty(Constants.CLIENT_SERVICE_NAME, String.class);
-        ServiceMode serviceMode = environment.getProperty(Constants.CLIENT_SERVICE_MODE, ServiceMode.class);
-
-        boolean enableAutoConfiguration = StringUtils.isNotBlank(serviceName) &&
-                                          ArrayUtils.contains(ServiceMode.values(), serviceMode);
-        if (enableAutoConfiguration) {
-            log.info("Enable thrift client auto configuration, service name [{}], service model [{}]",
-                    serviceName, serviceMode);
-        }
-        return enableAutoConfiguration;
+        return true;
     }
 }

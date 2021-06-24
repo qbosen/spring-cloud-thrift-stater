@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.server.annotation.ThriftService;
 import top.abosen.thrift.server.exception.ThriftServerException;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@ConditionalOnProperty(value = Constants.SERVER_ID, matchIfMissing = false)
+@ConditionalOnProperty(value = Constants.SERVER_SERVICE_NAME, matchIfMissing = false)
 @EnableConfigurationProperties(ThriftServerProperties.class)
 @RequiredArgsConstructor
 public class ThriftServerAutoConfiguration {

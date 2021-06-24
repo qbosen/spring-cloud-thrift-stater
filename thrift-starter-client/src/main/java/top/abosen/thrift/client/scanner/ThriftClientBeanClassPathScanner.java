@@ -1,7 +1,5 @@
 package top.abosen.thrift.client.scanner;
 
-import lombok.AccessLevel;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TServiceClient;
@@ -14,13 +12,14 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 import top.abosen.thrift.client.exception.ThriftClientException;
-import top.abosen.thrift.client.properties.ThriftClientServiceProperties;
+import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.common.Utils;
 import top.abosen.thrift.common.signature.ServiceSignature;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -31,9 +30,6 @@ import java.util.Set;
 @Slf4j
 public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionScanner {
 
-    @Setter(AccessLevel.PROTECTED)
-    private ThriftClientServiceProperties clientServiceProperties;
-
     public ThriftClientBeanClassPathScanner(BeanDefinitionRegistry registry) {
         super(registry, true);
     }
@@ -42,7 +38,7 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
     protected void registerDefaultFilters() {
         this.addIncludeFilter((metadataReader, metadataReaderFactory) ->
                 metadataReader.getClassMetadata().isInterface() &&
-                metadataReader.getClassMetadata().getClassName().endsWith("$Iface"));
+                        metadataReader.getClassMetadata().getClassName().endsWith("$Iface"));
     }
 
     @Override
@@ -51,56 +47,65 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
         return metadata.isInterface();
     }
 
+    private void handleBeanDefinitionHolders(Iterable<BeanDefinitionHolder> definitionHolders, ThriftClientProperties.Service service) {
+        for (BeanDefinitionHolder definitionHolder : definitionHolders) {
 
-    @Override
-    protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
-        Set<BeanDefinitionHolder> definitionHolders = super.doScan(basePackages);
-        definitionHolders.forEach(this::handleBeanDefinitionHolder);
-        return definitionHolders;
+            GenericBeanDefinition definition = (GenericBeanDefinition) definitionHolder.getBeanDefinition();
+
+            if (StringUtils.isEmpty(definition.getBeanClassName()) || !definition.getBeanClassName().endsWith("$Iface")) {
+                // 不是一个可行的 iface 定义
+                return;
+            }
+            Class<?> ifaceClass;
+            try {
+                ifaceClass = Class.forName(definition.getBeanClassName());
+            } catch (ClassNotFoundException e) {
+                log.error("无法加载iface类定义", e);
+                return;
+            }
+            // Iface接口的包裹累 就是 service 类
+            Class<?> serviceClass = ifaceClass.getEnclosingClass();
+
+            Class<? extends TServiceClient> clientClass = Arrays.stream(serviceClass.getClasses())
+                    .filter(it -> ClassUtils.isAssignable(TServiceClient.class, it))
+                    .findAny().map(Utils::<Class<? extends TServiceClient>>cast)
+                    .orElseThrow(() -> new ThriftClientException("未找到相关的Client定义"));
+
+            Constructor<? extends TServiceClient> constructor;
+            try {
+                constructor = clientClass.getConstructor(TProtocol.class);
+            } catch (NoSuchMethodException e) {
+                log.error(e.getMessage(), e);
+                throw new ThriftClientException("未找到Client的TProtocol构造器", e);
+            }
+
+            // 从 Iface 扫描的 version 都是 default_version
+            ServiceSignature serviceSignature = new ServiceSignature(service.getServiceName(), serviceClass, Constants.DEFAULT_VERSION);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS, ifaceClass);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS_NAME, ifaceClass.getName());
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_CLASS, serviceClass);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_SIGNATURE, serviceSignature);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CLASS, clientClass);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONSTRUCTOR, constructor);
+            definition.setBeanClass(ThriftClientFactoryBean.class);
+        }
+
     }
 
-    private void handleBeanDefinitionHolder(BeanDefinitionHolder definitionHolder) {
-        GenericBeanDefinition definition = (GenericBeanDefinition) definitionHolder.getBeanDefinition();
-
-        if (StringUtils.isEmpty(definition.getBeanClassName()) || !definition.getBeanClassName().endsWith("$Iface")) {
-            // 不是一个可行的 iface 定义
-            return;
-        }
-        Class<?> ifaceClass;
-        try {
-            ifaceClass = Class.forName(definition.getBeanClassName());
-        } catch (ClassNotFoundException e) {
-            log.error("无法加载iface类定义", e);
-            return;
-        }
-        // Iface接口的包裹累 就是 service 类
-        Class<?> serviceClass = ifaceClass.getEnclosingClass();
-
-        Class<? extends TServiceClient> clientClass = Arrays.stream(serviceClass.getClasses())
-                .filter(it -> ClassUtils.isAssignable(TServiceClient.class, it))
-                .findAny().map(Utils::<Class<? extends TServiceClient>>cast)
-                .orElseThrow(() -> new ThriftClientException("未找到相关的Client定义"));
-
-        Constructor<? extends TServiceClient> constructor;
-        try {
-            constructor = clientClass.getConstructor(TProtocol.class);
-        } catch (NoSuchMethodException e) {
-            log.error(e.getMessage(), e);
-            throw new ThriftClientException("未找到Client的TProtocol构造器", e);
+    public int scanService(ThriftClientProperties.Service service) {
+        String[] packagesToScan = Arrays.stream(service.getPackageToScan().split(","))
+                .map(String::trim).filter(StringUtils::isNoneEmpty).toArray(String[]::new);
+        if (packagesToScan.length == 0) {
+            log.warn("服务[{}] 未配置扫描包路径", service.getServiceName());
+            return 0;
         }
 
-        if (clientServiceProperties == null) {
-            throw new ThriftClientException("无法加载服务配置");
-        }
-        // 从 Iface 扫描的 version 都是 default_version
-        ServiceSignature serviceSignature = new ServiceSignature(clientServiceProperties.getServiceName(), serviceClass, Constants.DEFAULT_VERSION);
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS, ifaceClass);
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS_NAME, ifaceClass.getName());
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_CLASS, serviceClass);
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_SIGNATURE, serviceSignature);
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CLASS, clientClass);
-        definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONSTRUCTOR, constructor);
-        definition.setBeanClass(ThriftClientFactoryBean.class);
+        BeanDefinitionRegistry registry = getRegistry();
+        Objects.requireNonNull(registry);
+        int beanCountAtScanStart = registry.getBeanDefinitionCount();
+        Set<BeanDefinitionHolder> definitionHolders = doScan(packagesToScan);
+        handleBeanDefinitionHolders(definitionHolders, service);
+        return (getRegistry().getBeanDefinitionCount() - beanCountAtScanStart);
+
     }
-
 }

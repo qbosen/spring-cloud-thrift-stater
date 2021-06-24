@@ -1,13 +1,13 @@
 package top.abosen.thrift.client;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cloud.client.CommonsClientAutoConfiguration;
-import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import top.abosen.thrift.client.properties.ThriftClientProperties;
+import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
 import top.abosen.thrift.common.signature.DefaultServiceSignatureGenerator;
 import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 
@@ -17,14 +17,23 @@ import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
  */
 
 @Configuration
-@ConditionalOnBean(DiscoveryClient.class)
-@ConditionalOnDiscoveryEnabled
-@AutoConfigureAfter(CommonsClientAutoConfiguration.class)
+// todo 恢复
+//@ConditionalOnBean(DiscoveryClient.class)
+//@ConditionalOnDiscoveryEnabled
+//@AutoConfigureAfter(CommonsClientAutoConfiguration.class)
+@AutoConfigureOrder(Integer.MAX_VALUE)
+@EnableConfigurationProperties(ThriftClientProperties.class)
 public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
     public ServiceSignatureGenerator signatureGenerator() {
         return new DefaultServiceSignatureGenerator();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ThriftClientBeanScanProcessor thriftClientBeanScannerConfigurer() {
+        return new ThriftClientBeanScanProcessor();
     }
 }
