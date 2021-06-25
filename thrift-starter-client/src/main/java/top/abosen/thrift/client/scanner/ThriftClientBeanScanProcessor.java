@@ -27,16 +27,19 @@ public class ThriftClientBeanScanProcessor implements BeanFactoryPostProcessor, 
     private ApplicationContext applicationContext;
     private ThriftClientProperties clientProperties;
 
+    public static ApplicationContext applicationContext2;
 
     @Override
     public void setEnvironment(Environment environment) {
+        // 此时 configurationProperties 尚未注册
         this.clientProperties = Binder.get(environment)
-                .bind("spring.thrift.client", ThriftClientProperties.class).get();
+                .bind("spring.cloud.thrift.client", ThriftClientProperties.class).get();
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+        applicationContext2 = applicationContext;
     }
 
     @Override

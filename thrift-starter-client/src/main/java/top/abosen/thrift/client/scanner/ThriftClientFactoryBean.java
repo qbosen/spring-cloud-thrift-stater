@@ -1,26 +1,72 @@
 package top.abosen.thrift.client.scanner;
 
+import lombok.Data;
 import org.apache.thrift.TServiceClient;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import top.abosen.thrift.client.exception.ThriftClientException;
+import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.common.signature.ServiceSignature;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 
 /**
  * @author qiubaisen
  * @date 2021/6/24
  */
-public class ThriftClientFactoryBean {
-    public final static String BEAN_CLASS = "beanClass";
-    public final static String BEAN_CLASS_NAME = "beanClassName";
-    public static final String SERVICE_CLASS = "serviceClass";
-    public final static String SERVICE_SIGNATURE = "serviceSignature";
-    public final static String CLIENT_CLASS = "clientClass";
-    public final static String CLIENT_CONSTRUCTOR = "clientConstructor";
 
-    private Class<?> beanClass;
+@Data
+public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBean, ApplicationContextAware {
+    public static final String BEAN_CLASS = "beanClass";
+    public static final String BEAN_CLASS_NAME = "beanClassName";
+    public static final String SERVICE_CLASS = "serviceClass";
+    public static final String SERVICE_SIGNATURE = "serviceSignature";
+    public static final String CLIENT_CLASS = "clientClass";
+    public static final String CLIENT_CONSTRUCTOR = "clientConstructor";
+    public static final String CLIENT_CONFIG = "serviceConfig";
+    public static final String APPLICATION_CONTEXT = "applicationContext";
+
+    private Class<T> beanClass;
     private String beanClassName;
     private Class<?> serviceClass;
     private ServiceSignature serviceSignature;
     private Class<?> clientClass;
     private Constructor<? extends TServiceClient> clientConstructor;
+
+    private ApplicationContext applicationContext;
+
+    private DiscoveryClient discoveryClient;
+    private ThriftClientProperties.Service serviceConfig;
+
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T getObject() throws Exception {
+        if (beanClass.isInterface()) {
+            return (T) Proxy.newProxyInstance(beanClass.getClassLoader(),
+                    new Class<?>[]{beanClass},
+                    new ThriftClientInvocationHandler(
+                            serviceSignature,
+                            clientClass,
+                            clientConstructor,
+                            serviceConfig,
+                            discoveryClient
+                    ));
+        }
+
+        throw new ThriftClientException(String.format("无法代理[%s]", beanClass.getName()));
+    }
+
+    @Override public Class<?> getObjectType() {
+        return beanClass;
+    }
+
+    @Override public void afterPropertiesSet() throws Exception {
+//        this.discoveryClient = ThriftClientBeanScanProcessor.applicationContext2.getBean(DiscoveryClient.class);
+    }
+
 }

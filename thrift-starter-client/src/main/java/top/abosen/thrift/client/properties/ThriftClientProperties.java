@@ -13,7 +13,7 @@ import java.util.List;
  */
 
 @Data
-@ConfigurationProperties(prefix = "spring.thrift.client")
+@ConfigurationProperties(prefix = "spring.cloud.thrift.client")
 public class ThriftClientProperties {
     String mark = "";
     List<Service> services = Collections.emptyList();

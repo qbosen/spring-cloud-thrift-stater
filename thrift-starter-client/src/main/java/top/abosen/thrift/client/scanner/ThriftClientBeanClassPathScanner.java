@@ -6,8 +6,11 @@ import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TProtocol;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
@@ -38,7 +41,7 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
     protected void registerDefaultFilters() {
         this.addIncludeFilter((metadataReader, metadataReaderFactory) ->
                 metadataReader.getClassMetadata().isInterface() &&
-                        metadataReader.getClassMetadata().getClassName().endsWith("$Iface"));
+                metadataReader.getClassMetadata().getClassName().endsWith("$Iface"));
     }
 
     @Override
@@ -81,12 +84,21 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
 
             // 从 Iface 扫描的 version 都是 default_version
             ServiceSignature serviceSignature = new ServiceSignature(service.getServiceName(), serviceClass, Constants.DEFAULT_VERSION);
+
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS, ifaceClass);
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.BEAN_CLASS_NAME, ifaceClass.getName());
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_CLASS, serviceClass);
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.SERVICE_SIGNATURE, serviceSignature);
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CLASS, clientClass);
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONSTRUCTOR, constructor);
+            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONFIG, service);
+
+//            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.APPLICATION_CONTEXT,
+//                    new RuntimeBeanReference(ApplicationContext.class));
+
+
+            definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO);
+            definition.setPrimary(true);
             definition.setBeanClass(ThriftClientFactoryBean.class);
         }
 

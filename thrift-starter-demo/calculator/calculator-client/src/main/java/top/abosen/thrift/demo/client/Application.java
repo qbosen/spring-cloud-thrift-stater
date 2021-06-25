@@ -1,12 +1,10 @@
 package top.abosen.thrift.demo.client;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import top.abosen.thrift.client.annotation.EnableThriftClient;
-
-import javax.annotation.PostConstruct;
 
 /**
  * @author qiubaisen
@@ -16,16 +14,12 @@ import javax.annotation.PostConstruct;
 
 @SpringBootApplication
 @EnableThriftClient
+@EnableDiscoveryClient
+@EnableFeignClients
 public class Application {
-    @Autowired
-    ApplicationContext applicationContext;
 
-    @PostConstruct
-    void init(){
-        System.out.println();
-    }
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(Application.class, args);
     }
 
 }

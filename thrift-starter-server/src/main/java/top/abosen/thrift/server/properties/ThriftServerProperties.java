@@ -8,7 +8,7 @@ import top.abosen.thrift.common.ServiceMode;
  * @author qiubaisen
  * @date 2021/6/15
  */
-@ConfigurationProperties(prefix = "spring.thrift.server")
+@ConfigurationProperties(prefix = "spring.cloud.thrift.server")
 @Data
 public class ThriftServerProperties {
     /**

@@ -9,7 +9,6 @@ spring:
         enabled: true
         register: true
         prefer-ip-address: true
-        service-name: ${spring.application.name}
         instance-id: ${spring.application.name}:${random.value}
         tags:
           - calculator
@@ -19,14 +18,8 @@ spring:
         health-check-interval: 10s
         query-passing: true
     thrift:
-      server:
-        id: calculator-thrift-server
-        mode: hs_ha
-        port: 8081
-        discovery:
-          enabled: true
-          host: "${CONSUL_HOST:localhost}"
-          port: "${CONSUL_PORT:8500}"
-          health-check:
-            enabled: true
-            check-interval: 10
+      client:
+        mark: abcd
+        services:
+          - service-name: calculator-thrift-service
+            package-to-scan: top.abosen.thrift.demo.calculator

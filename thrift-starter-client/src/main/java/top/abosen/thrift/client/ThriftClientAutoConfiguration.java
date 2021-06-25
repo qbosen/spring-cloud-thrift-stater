@@ -3,7 +3,6 @@ package top.abosen.thrift.client;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
@@ -33,7 +32,8 @@ public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ThriftClientBeanScanProcessor thriftClientBeanScannerConfigurer() {
+    public static ThriftClientBeanScanProcessor thriftClientBeanScannerConfigurer() {
+        // BeanFactoryPostProcessor objects must be instantiated very early in the container lifecycle
         return new ThriftClientBeanScanProcessor();
     }
 }

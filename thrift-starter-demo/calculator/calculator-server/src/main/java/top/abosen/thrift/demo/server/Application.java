@@ -13,6 +13,6 @@ import top.abosen.thrift.server.annotation.EnableThriftServer;
 @EnableThriftServer
 public class Application {
     public static void main(String[] args) {
-        SpringApplication.run(Application.class);
+        SpringApplication.run(Application.class, args);
     }
 }

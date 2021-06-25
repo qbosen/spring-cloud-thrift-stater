@@ -10,14 +10,3 @@ management:
     web:
       exposure:
         include: refresh,health,info
-spring:
-  thrift:
-    client:
-      mark: abcd
-      services:
-        -
-          service-name: calculator-thrift-service
-          package-to-scan: top.abosen.thrift.demo.calculator
-        -
-          service-name: calculator-thrift-service2
-          package-to-scan: top.abosen.thrift.demo.calculator2
