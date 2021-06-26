@@ -93,9 +93,6 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONSTRUCTOR, constructor);
             definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.CLIENT_CONFIG, service);
 
-//            definition.getPropertyValues().addPropertyValue(ThriftClientFactoryBean.APPLICATION_CONTEXT,
-//                    new RuntimeBeanReference(ApplicationContext.class));
-
 
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO);
             definition.setPrimary(true);

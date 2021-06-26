@@ -54,7 +54,7 @@ public class ThriftServerModeManager {
             // todo 兼容老版本，如果配置了兼容属性，从相同服务中选取最新版本做兼容注册
             multiplexedProcessor.registerProcessor(serviceSignature, singleProcessor);
         }
-        TServerSocket serverSocket = new TServerSocket(properties.getPort());
+        TServerSocket serverSocket = new TServerSocket(properties.getServicePort());
         TServer.Args args = new TSimpleServer.Args(serverSocket)
                 .transportFactory(new TFastFramedTransport.Factory())
                 .protocolFactory(new TCompactProtocol.Factory())

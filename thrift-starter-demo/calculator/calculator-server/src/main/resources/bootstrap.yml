@@ -10,7 +10,7 @@ spring:
         register: true
         prefer-ip-address: true
         service-name: ${spring.application.name}
-        instance-id: ${spring.application.name}:${random.value}
+        instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
         tags:
           - calculator
           - http
@@ -20,13 +20,15 @@ spring:
         query-passing: true
     thrift:
       server:
-        id: calculator-thrift-server
-        mode: hs_ha
-        port: 8081
+        service-name: calculator-thrift-server
+        service-mode: hs_ha
+        service-port: 8081
+        queue-size: 1000
         discovery:
-          enabled: true
-          host: "${CONSUL_HOST:localhost}"
-          port: "${CONSUL_PORT:8500}"
-          health-check:
-            enabled: true
-            check-interval: 10
+          register: true
+          health-check: true
+          prefer-ip-address: true
+          instance-id: ${spring.cloud.thrift.server.service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.service-port}
+          tags:
+            - calculator
+            - thrift

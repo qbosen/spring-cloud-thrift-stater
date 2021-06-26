@@ -20,7 +20,7 @@ import java.lang.reflect.Proxy;
  */
 
 @Data
-public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBean, ApplicationContextAware {
+public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBean {
     public static final String BEAN_CLASS = "beanClass";
     public static final String BEAN_CLASS_NAME = "beanClassName";
     public static final String SERVICE_CLASS = "serviceClass";
@@ -28,7 +28,6 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
     public static final String CLIENT_CLASS = "clientClass";
     public static final String CLIENT_CONSTRUCTOR = "clientConstructor";
     public static final String CLIENT_CONFIG = "serviceConfig";
-    public static final String APPLICATION_CONTEXT = "applicationContext";
 
     private Class<T> beanClass;
     private String beanClassName;
@@ -37,9 +36,6 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
     private Class<?> clientClass;
     private Constructor<? extends TServiceClient> clientConstructor;
 
-    private ApplicationContext applicationContext;
-
-    private DiscoveryClient discoveryClient;
     private ThriftClientProperties.Service serviceConfig;
 
 
@@ -53,8 +49,7 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
                             serviceSignature,
                             clientClass,
                             clientConstructor,
-                            serviceConfig,
-                            discoveryClient
+                            serviceConfig
                     ));
         }
 

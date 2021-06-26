@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @ConfigurationProperties(prefix = "spring.cloud.thrift.client")
 public class ThriftClientProperties {
-    String mark = "";
+    Pool pool = new Pool();
     List<Service> services = Collections.emptyList();
 
     @Data
@@ -23,5 +23,36 @@ public class ThriftClientProperties {
         String serviceName = "";
         ServiceMode serviceMode = ServiceMode.DEFAULT;
         String packageToScan = "";
+    }
+
+    @Data
+    public static class Pool {
+        int retryTimes = 3;
+        int connectTimeout = 10000;
+        int poolMaxTotalPerKey = 60;
+        int poolMaxIdlePerKey = 40;
+        int poolMinIdlePerKey = 3;
+        long poolMaxWait = 180000;
+
+        /**
+         * 池对象创建时时验证是否正常可用
+         */
+        boolean testOnCreate = true;
+
+        /**
+         * 池对象借出时验证是否正常可用
+         */
+        boolean testOnBorrow = true;
+
+
+        /**
+         * 池对象归还时验证是否正常可用
+         */
+        boolean testOnReturn = true;
+
+        /**
+         * 空闲连接自动被空闲连接回收器
+         */
+        boolean isTestWhileIdle = true;
     }
 }

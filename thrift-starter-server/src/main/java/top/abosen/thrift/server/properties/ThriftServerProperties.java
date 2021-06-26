@@ -4,6 +4,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import top.abosen.thrift.common.ServiceMode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author qiubaisen
  * @date 2021/6/15
@@ -14,11 +17,11 @@ public class ThriftServerProperties {
     /**
      * 服务id
      */
-    String id;
+    String serviceName;
     /**
      * 服务端口
      */
-    int port;
+    int servicePort;
     /**
      * 服务的工作线程队列容量
      */
@@ -33,7 +36,7 @@ public class ThriftServerProperties {
      * threadedSelector: 线程池选择器模型
      * </p>
      */
-    ServiceMode mode = ServiceMode.DEFAULT;
+    ServiceMode serviceMode = ServiceMode.DEFAULT;
     /**
      * 服务注册信息（默认不开启）
      */
@@ -45,37 +48,11 @@ public class ThriftServerProperties {
         /**
          * 是否允许服务注册
          */
-        boolean enabled = false;
-
-        /**
-         * 服务注册中心的地址
-         */
-        String host;
-        /**
-         * 服务注册中心的端口号(默认8500)
-         */
-        int port = 8500;
-        /**
-         * 服务健康检查
-         */
-        HealthCheck healthCheck;
-
-
-        @Data
-        public static class HealthCheck {
-            /**
-             * 是否允许健康检查
-             */
-            boolean enabled = true;
-            /**
-             * 服务健康检查时间间隔 (默认30s)
-             */
-            int checkInterval = 30;
-            /**
-             * 服务健康检查超时时间（默认3m）
-             */
-            int checkTimeout = 3;
-        }
+        boolean register = true;
+        boolean healthCheck = true;
+        boolean preferIpAddress = true;
+        String instanceId;
+        List<String> tags = new ArrayList<>();
     }
 
 

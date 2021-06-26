@@ -4,9 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;
+import org.springframework.cloud.consul.ConditionalOnConsulEnabled;
+import org.springframework.cloud.consul.discovery.ConsulDiscoveryProperties;
+import org.springframework.cloud.consul.discovery.HeartbeatProperties;
+import org.springframework.cloud.consul.serviceregistry.ConsulServiceRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +21,7 @@ import top.abosen.thrift.server.annotation.ThriftService;
 import top.abosen.thrift.server.exception.ThriftServerException;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.server.ThriftServer;
+import top.abosen.thrift.server.server.ThriftServerConsulDiscovery;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 
 import java.util.Arrays;
@@ -50,7 +57,7 @@ public class ThriftServerAutoConfiguration {
                         target = bean;
                     }
                     ThriftService thriftService = target.getClass().getAnnotation(ThriftService.class);
-                    return ThriftServiceWrapper.of(properties.getId(), beanName, target, thriftService.version());
+                    return ThriftServiceWrapper.of(properties.getServiceName(), beanName, target, thriftService.version());
                 }).collect(Collectors.toList());
 
         if (serviceWrappers.isEmpty()) {
@@ -59,5 +66,26 @@ public class ThriftServerAutoConfiguration {
         }
 
         return ThriftServer.createServer(properties, serviceWrappers);
+    }
+
+    @Bean
+    @ConditionalOnConsulEnabled
+    @ConditionalOnBean({ConsulServiceRegistry.class, AutoServiceRegistrationProperties.class,
+            ConsulDiscoveryProperties.class, HeartbeatProperties.class})
+    public ThriftServerConsulDiscovery thriftServerConsulDiscovery(
+            ThriftServerProperties serverProperties,
+            ConsulServiceRegistry consulServiceRegistry,
+            AutoServiceRegistrationProperties autoServiceRegistrationProperties,
+            ConsulDiscoveryProperties discoveryProperties,
+            ApplicationContext context,
+            HeartbeatProperties heartbeatProperties
+    ) {
+        return new ThriftServerConsulDiscovery(
+                serverProperties,
+                consulServiceRegistry,
+                autoServiceRegistrationProperties,
+                discoveryProperties,
+                context,
+                heartbeatProperties);
     }
 }

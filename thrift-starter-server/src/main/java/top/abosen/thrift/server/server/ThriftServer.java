@@ -1,11 +1,13 @@
 package top.abosen.thrift.server.server;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.experimental.FieldDefaults;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.server.TServer;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.SmartLifecycle;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
@@ -21,13 +23,18 @@ import java.util.List;
 
 @Getter
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ThriftServer implements SmartLifecycle {
-    TServer server;
-    ThriftServerProperties properties;
-    List<ThriftServiceWrapper> serviceWrappers;
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+public class ThriftServer implements SmartLifecycle, ApplicationContextAware {
+    final TServer server;
+    final ThriftServerProperties properties;
+    final List<ThriftServiceWrapper> serviceWrappers;
 
+    ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     public static ThriftServer createServer(ThriftServerProperties properties, List<ThriftServiceWrapper> serviceWrappers) {
         TServer server = ThriftServerModeManager.createServerWithMode(properties, serviceWrappers);
@@ -38,17 +45,19 @@ public class ThriftServer implements SmartLifecycle {
         return true;
     }
 
-    @Override public void start() {
-        log.debug("Starting thrift server [{}]", properties.getId());
+    @Override
+    public void start() {
+        log.debug("Starting thrift server [{}]", properties.getServiceName());
         new Thread(server::serve, "thrift-server-thread").start();
-        log.debug("Thrift server[{}] is started", properties.getId());
-
+        log.debug("Thrift server[{}] is started", properties.getServiceName());
+        applicationContext.publishEvent(new ThriftServerStartEvent(applicationContext));
     }
 
     @Override public void stop() {
-        log.debug("Stopping thrift server [{}]", properties.getId());
+        log.debug("Stopping thrift server [{}]", properties.getServiceName());
         server.stop();
-        log.debug("Thrift server[{}] is stopped", properties.getId());
+        log.debug("Thrift server[{}] is stopped", properties.getServiceName());
+        applicationContext.publishEvent(new ThriftServerStopEvent(applicationContext));
     }
 
     @Override public boolean isRunning() {

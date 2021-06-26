@@ -50,7 +50,7 @@ public class ThriftServiceWrapper {
         // todo support AsyncIface
         Class<?> ifaceType = Utils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
                 .orElseThrow(() -> new IllegalStateException("No thrift IFace found on service"));
-        String signature = String.join("-", new String[]{serverId, serviceName, String.valueOf(version)});
+        String signature = String.join("$", new String[]{serverId, ifaceType.getEnclosingClass().getName(), String.valueOf(version)});
         return new ThriftServiceWrapper(serviceName, signature, thriftService.getClass(), ifaceType, thriftService, version);
     }
 }

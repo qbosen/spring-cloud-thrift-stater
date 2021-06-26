@@ -6,6 +6,8 @@ package top.abosen.thrift.common.signature;
  */
 public class DefaultServiceSignatureGenerator implements ServiceSignatureGenerator {
     @Override public String generate(ServiceSignature signature) {
-        return String.format("%s:%s:%s", signature.getServiceName(), signature.getServiceClass().getName(), signature.getVersion());
+
+        return String.join("$",
+                new String[]{signature.getServiceName(), signature.getServiceClass().getName(), String.valueOf(signature.getVersion())});
     }
 }
