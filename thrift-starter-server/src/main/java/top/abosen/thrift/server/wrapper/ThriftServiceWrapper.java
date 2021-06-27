@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import top.abosen.thrift.common.Utils;
+import top.abosen.thrift.common.signature.ServiceSignature;
+import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 import top.abosen.thrift.server.annotation.ThriftService;
 
 /**
@@ -16,10 +18,6 @@ import top.abosen.thrift.server.annotation.ThriftService;
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ThriftServiceWrapper {
-    /**
-     * {@link ThriftService#value()} 服务名称/bean名称
-     */
-    String name;
     /**
      * 服务签名，用于唯一标示一个服务
      */
@@ -36,21 +34,18 @@ public class ThriftServiceWrapper {
      * thrift服务实现类
      */
     Object target;
-    /**
-     * 版本号
-     */
-    double version;
 
+    ServiceSignature serviceSignature;
 
-    public static ThriftServiceWrapper of(String serverId, String serviceName, Object thriftService, double version) {
+    public static ThriftServiceWrapper of(String serverName, Object thriftService, double version, ServiceSignatureGenerator signatureGenerator) {
         if (version <= 0) {
             throw new IllegalArgumentException("Thrift service version must be positive: " + version);
         }
 
-        // todo support AsyncIface
         Class<?> ifaceType = Utils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
                 .orElseThrow(() -> new IllegalStateException("No thrift IFace found on service"));
-        String signature = String.join("$", new String[]{serverId, ifaceType.getEnclosingClass().getName(), String.valueOf(version)});
-        return new ThriftServiceWrapper(serviceName, signature, thriftService.getClass(), ifaceType, thriftService, version);
+        ServiceSignature serviceSignature = new ServiceSignature(serverName, ifaceType.getEnclosingClass(), version);
+        String signature = signatureGenerator.generate(serviceSignature);
+        return new ThriftServiceWrapper(signature, thriftService.getClass(), ifaceType, thriftService, serviceSignature);
     }
 }

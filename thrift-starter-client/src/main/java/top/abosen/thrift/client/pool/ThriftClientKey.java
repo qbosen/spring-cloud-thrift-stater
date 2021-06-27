@@ -13,4 +13,10 @@ public class ThriftClientKey {
     String serviceName;
 
     ThriftServerNode node;
+
+    public ThriftClientKey(String signature, String serviceName, String host, int port) {
+        this.signature = signature;
+        this.serviceName = serviceName;
+        this.node = new ThriftServerNode(host, port);
+    }
 }

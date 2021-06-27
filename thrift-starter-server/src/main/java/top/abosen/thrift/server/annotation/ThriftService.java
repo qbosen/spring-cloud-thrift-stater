@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 @Component
 public @interface ThriftService {
     /**
-     * service name / bean name, 不填为默认bean name, 不可重复
+     * bean name
      */
     @AliasFor(annotation = Component.class)
     String value() default "";

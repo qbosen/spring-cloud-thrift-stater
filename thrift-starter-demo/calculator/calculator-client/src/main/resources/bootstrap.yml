@@ -19,6 +19,9 @@ spring:
         query-passing: true
     thrift:
       client:
+        pool:
+          retry-times: 2
         services:
           - service-name: calculator-thrift-server
+            service-mode: threaded_selector
             package-to-scan: top.abosen.thrift.demo.calculator

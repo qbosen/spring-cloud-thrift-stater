@@ -10,5 +10,4 @@ import lombok.Value;
 public class ThriftServerNode {
     String host;
     int port;
-    int timeout;
 }

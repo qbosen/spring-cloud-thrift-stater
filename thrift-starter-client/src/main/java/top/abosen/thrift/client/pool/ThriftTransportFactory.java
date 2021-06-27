@@ -16,7 +16,7 @@ public class ThriftTransportFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ThriftTransportFactory.class);
 
-    private static final int CONNECT_TIMEOUT = 10;
+    private static final int CONNECT_TIMEOUT = 3000;
 
     public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
         TTransport transport;
@@ -34,7 +34,7 @@ public class ThriftTransportFactory {
                 break;
 
             default:
-                throw new ThriftClientException("Service model is configured in wrong way");
+                throw new ThriftClientException("Service mode is configured in wrong way");
         }
 
         return transport;
@@ -47,14 +47,14 @@ public class ThriftTransportFactory {
     private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
         TTransport transport = new TSocket(serverNode.getHost(), serverNode.getPort(),
                 connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT);
-        LOGGER.info("Established a new socket transport, service model is {}", serviceMode);
+        LOGGER.info("Established a new socket transport, service mode is {}", serviceMode);
         return transport;
     }
 
     private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
         TTransport transport = new TFastFramedTransport(new TSocket(serverNode.getHost(), serverNode.getPort(),
                 connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT));
-        LOGGER.info("Established a new framed transport, service model is {}", serviceMode);
+        LOGGER.info("Established a new framed transport, service mode is {}", serviceMode);
         return transport;
     }
 

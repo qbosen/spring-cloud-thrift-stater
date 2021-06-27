@@ -4,9 +4,6 @@ import lombok.Data;
 import org.apache.thrift.TServiceClient;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.common.signature.ServiceSignature;
@@ -20,7 +17,7 @@ import java.lang.reflect.Proxy;
  */
 
 @Data
-public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBean {
+public class ThriftClientFactoryBean<T> implements FactoryBean<T>, InitializingBean {
     public static final String BEAN_CLASS = "beanClass";
     public static final String BEAN_CLASS_NAME = "beanClassName";
     public static final String SERVICE_CLASS = "serviceClass";
@@ -35,7 +32,6 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
     private ServiceSignature serviceSignature;
     private Class<?> clientClass;
     private Constructor<? extends TServiceClient> clientConstructor;
-
     private ThriftClientProperties.Service serviceConfig;
 
 
@@ -47,7 +43,6 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
                     new Class<?>[]{beanClass},
                     new ThriftClientInvocationHandler(
                             serviceSignature,
-                            clientClass,
                             clientConstructor,
                             serviceConfig
                     ));
@@ -61,7 +56,6 @@ public class ThriftClientFactoryBean<T> implements FactoryBean<T>,InitializingBe
     }
 
     @Override public void afterPropertiesSet() throws Exception {
-//        this.discoveryClient = ThriftClientBeanScanProcessor.applicationContext2.getBean(DiscoveryClient.class);
     }
 
 }

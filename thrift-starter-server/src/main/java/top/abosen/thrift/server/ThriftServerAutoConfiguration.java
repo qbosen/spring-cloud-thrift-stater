@@ -17,6 +17,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.common.Constants;
+import top.abosen.thrift.common.signature.DefaultServiceSignatureGenerator;
+import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 import top.abosen.thrift.server.annotation.ThriftService;
 import top.abosen.thrift.server.exception.ThriftServerException;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
@@ -39,12 +41,17 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties(ThriftServerProperties.class)
 @RequiredArgsConstructor
 public class ThriftServerAutoConfiguration {
-    final ApplicationContext applicationContext;
 
     @Bean
     @ConditionalOnMissingBean
-    public ThriftServer thriftServerGroup(ThriftServerProperties properties) {
+    public ServiceSignatureGenerator signatureGenerator() {
+        return new DefaultServiceSignatureGenerator();
+    }
 
+    @Bean
+    @ConditionalOnMissingBean
+    public ThriftServer thriftServerGroup(
+            ThriftServerProperties properties, ApplicationContext applicationContext, ServiceSignatureGenerator signatureGenerator) {
         List<ThriftServiceWrapper> serviceWrappers = Arrays.stream(applicationContext.getBeanNamesForAnnotation(ThriftService.class))
                 .map(beanName -> {
                     Object bean = applicationContext.getBean(beanName);
@@ -57,7 +64,7 @@ public class ThriftServerAutoConfiguration {
                         target = bean;
                     }
                     ThriftService thriftService = target.getClass().getAnnotation(ThriftService.class);
-                    return ThriftServiceWrapper.of(properties.getServiceName(), beanName, target, thriftService.version());
+                    return ThriftServiceWrapper.of(properties.getServiceName(), target, thriftService.version(), signatureGenerator);
                 }).collect(Collectors.toList());
 
         if (serviceWrappers.isEmpty()) {
@@ -70,8 +77,10 @@ public class ThriftServerAutoConfiguration {
 
     @Bean
     @ConditionalOnConsulEnabled
-    @ConditionalOnBean({ConsulServiceRegistry.class, AutoServiceRegistrationProperties.class,
-            ConsulDiscoveryProperties.class, HeartbeatProperties.class})
+    @ConditionalOnBean({ConsulServiceRegistry.class,
+            AutoServiceRegistrationProperties.class,
+            ConsulDiscoveryProperties.class,
+            HeartbeatProperties.class})
     public ThriftServerConsulDiscovery thriftServerConsulDiscovery(
             ThriftServerProperties serverProperties,
             ConsulServiceRegistry consulServiceRegistry,

@@ -38,22 +38,45 @@ public class ThriftServerProperties {
      */
     ServiceMode serviceMode = ServiceMode.DEFAULT;
     /**
-     * 服务注册信息（默认不开启）
+     * 服务注册信息
      */
-    Discovery discovery;
+    Discovery discovery = new Discovery();
 
-    // todo add hsHa/threadPool/threadedSelector configuration
+    ThreadPool threadPool = new ThreadPool();
+    HsHa hsHa = new HsHa();
+    ThreadedSelector threadedSelector = new ThreadedSelector();
+
     @Data
     public static class Discovery {
-        /**
-         * 是否允许服务注册
-         */
-        boolean register = true;
+        boolean register = false;
         boolean healthCheck = true;
         boolean preferIpAddress = true;
         String instanceId;
         List<String> tags = new ArrayList<>();
     }
 
+    @Data
+    public static class ThreadPool {
+        int minWorkerThreads = 5;
+        int maxWorkerThreads = 20;
+        int requestTimeout = 5;
+        int keepAliveTime = 60;
+    }
+
+    @Data
+    public static class HsHa {
+        int minWorkerThreads = 5;
+        int maxWorkerThreads = 20;
+        int keepAliveTime = 60;
+    }
+
+    @Data
+    public static class ThreadedSelector {
+        int acceptQueueSizePerThread = 4;
+        int selectorThreads = 2;
+        int minWorkerThreads = 5;
+        int maxWorkerThreads = 20;
+        int keepAliveTime = 300;
+    }
 
 }

@@ -3,6 +3,7 @@ package top.abosen.thrift.client;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.thrift.transport.TTransport;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
@@ -74,11 +75,13 @@ public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnBean(LoadBalancerClient.class)
     public ThriftClientContext thriftClientContext(
             ThriftClientProperties properties,
             TransportKeyedObjectPool objectPool,
-            LoadBalancerClient loadBalancerClient
+            LoadBalancerClient loadBalancerClient,
+            ServiceSignatureGenerator signatureGenerator
     ) {
-        return ThriftClientContext.context(properties, objectPool, loadBalancerClient);
+        return ThriftClientContext.init(properties, objectPool, loadBalancerClient, signatureGenerator);
     }
 }
