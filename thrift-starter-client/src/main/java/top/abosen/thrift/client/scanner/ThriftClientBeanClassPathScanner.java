@@ -6,11 +6,9 @@ import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TProtocol;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
@@ -114,7 +112,6 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
         int beanCountAtScanStart = registry.getBeanDefinitionCount();
         Set<BeanDefinitionHolder> definitionHolders = doScan(packagesToScan);
         handleBeanDefinitionHolders(definitionHolders, service);
-        return (getRegistry().getBeanDefinitionCount() - beanCountAtScanStart);
-
+        return getRegistry().getBeanDefinitionCount() - beanCountAtScanStart;
     }
 }

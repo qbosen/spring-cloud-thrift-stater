@@ -27,7 +27,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 /**
  * @author qiubaisen

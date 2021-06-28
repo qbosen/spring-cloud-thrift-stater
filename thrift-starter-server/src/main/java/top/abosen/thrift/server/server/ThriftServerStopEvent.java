@@ -1,7 +1,6 @@
 package top.abosen.thrift.server.server;
 
 import org.springframework.context.ApplicationEvent;
-import top.abosen.thrift.server.properties.ThriftServerProperties;
 
 /**
  * @author qiubaisen

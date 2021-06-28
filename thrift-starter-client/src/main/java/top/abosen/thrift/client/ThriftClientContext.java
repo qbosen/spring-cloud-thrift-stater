@@ -20,7 +20,7 @@ import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ThriftClientContext {
     static final ThriftClientContext CONTEXT = new ThriftClientContext();
-    volatile boolean init = false;
+    volatile boolean init;
 
     ThriftClientProperties properties;
     TransportKeyedObjectPool objectPool;

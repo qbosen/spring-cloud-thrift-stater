@@ -37,7 +37,8 @@ public class ThriftServerConsulDiscovery {
     ) {
         this.serverProperties = serverProperties;
         this.consulServiceRegistry = consulServiceRegistry;
-        this.consulRegistration = createConsulRegistration(serverProperties, discoveryProperties, autoServiceRegistrationProperties, context, heartbeatProperties);
+        this.consulRegistration =
+                createConsulRegistration(serverProperties, discoveryProperties, autoServiceRegistrationProperties, context, heartbeatProperties);
     }
 
     @EventListener(ThriftServerStartEvent.class)
