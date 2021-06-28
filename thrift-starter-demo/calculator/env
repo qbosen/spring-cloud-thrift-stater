@@ -1,1 +1,1 @@
-CONSUL_HOST_NAME=consul.calculator.com
+CONSUL_HOST=consul.calculator.com

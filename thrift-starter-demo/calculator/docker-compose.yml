@@ -11,7 +11,7 @@ services:
     networks:
       calculator:
         aliases:
-          - $CONSUL_HOST_NAME
+          - $CONSUL_HOST
 
   client-a:
     build:
@@ -19,7 +19,7 @@ services:
     ports:
       - "8090:8090"
     environment:
-      CONSUL_HOST: $CONSUL_HOST_NAME
+      CONSUL_HOST: $CONSUL_HOST
     depends_on:
       - my-consul
     networks:
@@ -33,7 +33,7 @@ services:
       - "8080:8080"
       - "8081:8081"
     environment:
-      CONSUL_HOST: $CONSUL_HOST_NAME
+      CONSUL_HOST: $CONSUL_HOST
     depends_on:
       - my-consul
     networks:
@@ -43,10 +43,22 @@ services:
     build:
       context: ./calculator-server
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "8082:8080"
+      - "8083:8081"
     environment:
-      CONSUL_HOST: $CONSUL_HOST_NAME
+      CONSUL_HOST: $CONSUL_HOST
+    depends_on:
+      - my-consul
+    networks:
+      calculator:
+
+  server-c:
+    build:
+      context: ./calculator-pure-server
+    ports:
+      - "8084:8081"
+    environment:
+      CONSUL_HOST: $CONSUL_HOST
     depends_on:
       - my-consul
     networks:

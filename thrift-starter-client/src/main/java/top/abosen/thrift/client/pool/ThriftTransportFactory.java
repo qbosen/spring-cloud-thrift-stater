@@ -1,20 +1,18 @@
 package top.abosen.thrift.client.pool;
 
-import top.abosen.thrift.client.exception.ThriftClientException;
-import top.abosen.thrift.common.ServiceMode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.transport.TFastFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import top.abosen.thrift.client.exception.ThriftClientException;
+import top.abosen.thrift.common.ServiceMode;
 
 /**
  * @author qiubaisen
  * @date 2021/6/26
  */
+@Slf4j
 public class ThriftTransportFactory {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ThriftTransportFactory.class);
 
     private static final int CONNECT_TIMEOUT = 3000;
 
@@ -47,14 +45,14 @@ public class ThriftTransportFactory {
     private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
         TTransport transport = new TSocket(serverNode.getHost(), serverNode.getPort(),
                 connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT);
-        LOGGER.info("Established a new socket transport, service mode is {}", serviceMode);
+        log.debug("Established a new socket transport, service mode is {}", serviceMode);
         return transport;
     }
 
     private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
         TTransport transport = new TFastFramedTransport(new TSocket(serverNode.getHost(), serverNode.getPort(),
                 connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT));
-        LOGGER.info("Established a new framed transport, service mode is {}", serviceMode);
+        log.debug("Established a new framed transport, service mode is {}", serviceMode);
         return transport;
     }
 

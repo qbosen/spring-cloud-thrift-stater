@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: calculator-thrift-pure-server
+  cloud:
+    consul:
+      host: "${CONSUL_HOST:localhost}"
+      port: "${CONSUL_PORT:8500}"
+      discovery:
+        enabled: true
+        register: false
+        register-health-check: false
+        query-passing: true
+    thrift:
+      server:
+        service-name: calculator-thrift-server
+        service-mode: threaded_selector
+        service-port: 8081
+        queue-size: 1000
+        discovery:
+          register: true
+          health-check: true
+          prefer-ip-address: true
+          instance-id: ${spring.cloud.thrift.server.service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.service-port}
+          tags:
+            - calculator
+            - thrift
+        threaded-selector:
+          min-worker-threads: 5
+          max-worker-threads: 20
+          keep-alive-time: 200

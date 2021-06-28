@@ -57,7 +57,7 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
 
         try {
             transport.open();
-            log.info("Open a new transport {}", transport);
+            log.debug("Open a new transport {}", transport);
         } catch (TTransportException e) {
             throw new ThriftClientException("Connect to " + node.getHost() + ":" + node.getPort() + " failed", e);
         }

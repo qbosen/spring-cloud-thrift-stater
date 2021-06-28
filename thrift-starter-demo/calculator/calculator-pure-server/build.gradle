@@ -1,0 +1,14 @@
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+
+dependencies {
+    implementation(project(":thrift-starter-demo:calculator:calculator-iface"))
+    implementation(project(":thrift-starter-server"))
+
+    implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
+    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+}
