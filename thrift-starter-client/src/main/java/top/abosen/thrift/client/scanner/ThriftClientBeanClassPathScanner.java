@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TProtocol;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -95,6 +96,7 @@ public class ThriftClientBeanClassPathScanner extends ClassPathBeanDefinitionSca
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO);
             definition.setPrimary(true);
             definition.setBeanClass(ThriftClientFactoryBean.class);
+            definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
         }
 
     }

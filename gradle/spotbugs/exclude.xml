@@ -2,14 +2,8 @@
 <FindBugsFilter>
     <!-- https://spotbugs.readthedocs.io/en/stable/filter.html -->
 
-    <Not>
-        <Match>
-            <Source name=".*/build/.*"/>
-        </Match>
-    </Not>
-
     <Match>
-        <Package name="top.abosen.thrift"/>
+        <Source name="~.*/build/.*"/>
     </Match>
 
     <Match>
