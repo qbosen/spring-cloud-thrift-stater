@@ -3,11 +3,10 @@ package top.abosen.thrift.client;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
+import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
-import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 
 /**
  * 运行时获取
@@ -24,21 +23,18 @@ public class ThriftClientContext {
 
     ThriftClientProperties properties;
     TransportKeyedObjectPool objectPool;
-    LoadBalancerClient loadBalancerClient;
-    ServiceSignatureGenerator signatureGenerator;
+    ThriftClientConfigure clientConfigure;
 
     public static synchronized ThriftClientContext init(
             ThriftClientProperties properties,
             TransportKeyedObjectPool objectPool,
-            LoadBalancerClient loadBalancerClient,
-            ServiceSignatureGenerator signatureGenerator) {
+            ThriftClientConfigure clientConfigure) {
         if (CONTEXT.init) {
             throw new ThriftClientException("不可重复初始化");
         }
         CONTEXT.properties = properties;
         CONTEXT.objectPool = objectPool;
-        CONTEXT.loadBalancerClient = loadBalancerClient;
-        CONTEXT.signatureGenerator = signatureGenerator;
+        CONTEXT.clientConfigure = clientConfigure;
 
         CONTEXT.init = true;
         return CONTEXT;

@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import top.abosen.thrift.common.Utils;
-import top.abosen.thrift.common.signature.ServiceSignature;
+import top.abosen.thrift.common.ServiceSignature;
 import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 import top.abosen.thrift.server.annotation.ThriftService;
 

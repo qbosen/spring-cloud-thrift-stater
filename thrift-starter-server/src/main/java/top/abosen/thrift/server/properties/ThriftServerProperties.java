@@ -14,37 +14,42 @@ import java.util.List;
 @ConfigurationProperties(prefix = "spring.cloud.thrift.server")
 @Data
 public class ThriftServerProperties {
-    /**
-     * 服务id
-     */
-    String serviceName;
-    /**
-     * 服务端口
-     */
-    int servicePort;
-    /**
-     * 服务的工作线程队列容量
-     */
-    int queueSize = 1000;
-    /**
-     * 服务模型(单线程/多线程/阻塞/非阻塞) 默认hsHa
-     * <p>
-     * simple: 单线程阻塞模型
-     * nonBlocking: 单线程非阻塞模型
-     * threadPool: 线程池同步模型
-     * hsHa: 半同步半异步模型
-     * threadedSelector: 线程池选择器模型
-     * </p>
-     */
-    ServiceMode serviceMode = ServiceMode.DEFAULT;
-    /**
-     * 服务注册信息
-     */
-    Discovery discovery = new Discovery();
+    List<Service> services;
 
-    ThreadPool threadPool = new ThreadPool();
-    HsHa hsHa = new HsHa();
-    ThreadedSelector threadedSelector = new ThreadedSelector();
+    @Data
+    public static class Service {
+        /**
+         * 服务id
+         */
+        String serviceName;
+        /**
+         * 服务端口
+         */
+        int servicePort;
+        /**
+         * 服务的工作线程队列容量
+         */
+        int queueSize = 1000;
+        /**
+         * 服务模型(单线程/多线程/阻塞/非阻塞) 默认hsHa
+         * <p>
+         * simple: 单线程阻塞模型
+         * nonBlocking: 单线程非阻塞模型
+         * threadPool: 线程池同步模型
+         * hsHa: 半同步半异步模型
+         * threadedSelector: 线程池选择器模型
+         * </p>
+         */
+        ServiceMode serviceMode = ServiceMode.DEFAULT;
+        /**
+         * 服务注册信息
+         */
+        Discovery discovery = new Discovery();
+
+        ThreadPool threadPool = new ThreadPool();
+        HsHa hsHa = new HsHa();
+        ThreadedSelector threadedSelector = new ThreadedSelector();
+    }
 
     @Data
     public static class Discovery {

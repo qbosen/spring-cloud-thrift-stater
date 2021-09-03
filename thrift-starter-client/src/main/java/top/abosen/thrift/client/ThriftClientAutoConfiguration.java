@@ -2,19 +2,22 @@ package top.abosen.thrift.client;
 
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.thrift.transport.TTransport;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.CommonsClientAutoConfiguration;
+import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
 import top.abosen.thrift.client.pool.TransportKeyedPooledObjectFactory;
+import top.abosen.thrift.client.properties.DefaultThriftClientConfigure;
+import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
-import top.abosen.thrift.common.signature.DefaultServiceSignatureGenerator;
-import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
 
 /**
  * @author qiubaisen
@@ -22,18 +25,16 @@ import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
  */
 
 @Configuration
-// todo 恢复
-//@ConditionalOnBean(DiscoveryClient.class)
-//@ConditionalOnDiscoveryEnabled
-//@AutoConfigureAfter(CommonsClientAutoConfiguration.class)
+@ConditionalOnDiscoveryEnabled
+@AutoConfigureAfter(CommonsClientAutoConfiguration.class)
 @AutoConfigureOrder(Integer.MAX_VALUE)
 @EnableConfigurationProperties(ThriftClientProperties.class)
 public class ThriftClientAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean
-    public ServiceSignatureGenerator signatureGenerator() {
-        return new DefaultServiceSignatureGenerator();
+    @ConditionalOnSingleCandidate
+    public ThriftClientConfigure defaultClientConfigure(LoadBalancerClient loadBalancerClient) {
+        return new DefaultThriftClientConfigure(loadBalancerClient);
     }
 
     @Bean
@@ -45,8 +46,8 @@ public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public TransportKeyedPooledObjectFactory transportKeyedPooledObjectFactory(ThriftClientProperties properties) {
-        return new TransportKeyedPooledObjectFactory(properties);
+    public TransportKeyedPooledObjectFactory transportKeyedPooledObjectFactory(ThriftClientConfigure thriftClientConfigure, ThriftClientProperties clientProperties) {
+        return new TransportKeyedPooledObjectFactory(thriftClientConfigure, clientProperties);
     }
 
     @Bean
@@ -75,13 +76,11 @@ public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean(LoadBalancerClient.class)
     public ThriftClientContext thriftClientContext(
             ThriftClientProperties properties,
             TransportKeyedObjectPool objectPool,
-            LoadBalancerClient loadBalancerClient,
-            ServiceSignatureGenerator signatureGenerator
+            ThriftClientConfigure thriftClientConfigure
     ) {
-        return ThriftClientContext.init(properties, objectPool, loadBalancerClient, signatureGenerator);
+        return ThriftClientContext.init(properties, objectPool, thriftClientConfigure);
     }
 }

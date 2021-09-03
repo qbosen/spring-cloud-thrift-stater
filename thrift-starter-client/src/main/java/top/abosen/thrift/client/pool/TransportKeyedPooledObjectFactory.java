@@ -1,5 +1,6 @@
 package top.abosen.thrift.client.pool;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
@@ -8,22 +9,22 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import top.abosen.thrift.client.exception.ThriftClientException;
+import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author qiubaisen
  * @date 2021/6/26
  */
 @Slf4j
+@RequiredArgsConstructor
 public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFactory<ThriftClientKey, TTransport> {
 
-    private final ThriftClientProperties properties;
-
-    public TransportKeyedPooledObjectFactory(ThriftClientProperties properties) {
-        this.properties = properties;
-    }
+    final ThriftClientConfigure clientConfigure;
+    final ThriftClientProperties properties;
 
     @Override
     public TTransport create(ThriftClientKey key) throws Exception {
@@ -34,26 +35,18 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
         if (node.getPort() <= 0 || node.getPort() > 65535) {
             throw new ThriftClientException("Invalid Thrift server, node port: " + node.getPort());
         }
+
         ThriftClientProperties.Service serviceConfig = properties.getServices().stream()
                 .filter(it -> it.getServiceName().equals(key.getServiceName()))
                 .findAny()
                 .orElseThrow(() -> new ThriftClientException(String.format("无法找到服务[%s]对应的客户端配置:", key.getServiceName())));
 
 
-        TTransport transport;
+        int connectTimeout = Optional.ofNullable(properties.getPool())
+                .map(ThriftClientProperties.Pool::getConnectTimeout)
+                .filter(it -> it > 0).orElse(30);
 
-        ThriftClientProperties.Pool poolProperties = properties.getPool();
-        if (Objects.isNull(poolProperties)) {
-            transport = ThriftTransportFactory.determineTTranport(serviceConfig.getServiceMode(), node);
-
-        } else {
-            int connectTimeout = poolProperties.getConnectTimeout();
-            if (connectTimeout > 0) {
-                transport = ThriftTransportFactory.determineTTranport(serviceConfig.getServiceMode(), node, connectTimeout);
-            } else {
-                transport = ThriftTransportFactory.determineTTranport(serviceConfig.getServiceMode(), node);
-            }
-        }
+        TTransport transport = clientConfigure.determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout);
 
         try {
             transport.open();

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
-import top.abosen.thrift.common.signature.ServiceSignature;
+import top.abosen.thrift.common.ServiceSignature;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Proxy;

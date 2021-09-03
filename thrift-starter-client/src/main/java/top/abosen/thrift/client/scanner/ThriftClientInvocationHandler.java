@@ -4,20 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TServiceClient;
-import org.apache.thrift.protocol.TCompactProtocol;
-import org.apache.thrift.protocol.TMultiplexedProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import top.abosen.thrift.client.ThriftClientContext;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.pool.ThriftClientKey;
+import top.abosen.thrift.client.pool.ThriftServerNode;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
+import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
-import top.abosen.thrift.common.signature.ServiceSignature;
-import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
+import top.abosen.thrift.common.ServiceSignature;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -39,11 +36,9 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
     final ThriftClientProperties.Service serviceConfig;
 
     // 延迟缓存属性
-    ServiceSignatureGenerator signatureGenerator;
-    LoadBalancerClient loadBalancerClient;
     ThriftClientProperties.Pool poolConfig;
     TransportKeyedObjectPool transportPool;
-
+    ThriftClientConfigure clientConfigure;
 
     public ThriftClientInvocationHandler(
             ServiceSignature serviceSignature,
@@ -57,18 +52,18 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
 
     @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 延迟设置
-        if (isNull(signatureGenerator) || isNull(loadBalancerClient) || isNull(poolConfig) || isNull(transportPool)) {
+        if (isNull(clientConfigure) || isNull(poolConfig) || isNull(transportPool)) {
             ThriftClientContext context = ThriftClientContext.context();
-            this.signatureGenerator = context.getSignatureGenerator();
-            this.loadBalancerClient = context.getLoadBalancerClient();
             this.poolConfig = context.getProperties().getPool();
             this.transportPool = context.getObjectPool();
+            this.clientConfigure = context.getClientConfigure();
         }
-        String signature = signatureGenerator.generate(serviceSignature);
+
+        String signature = clientConfigure.generateSignature(serviceSignature);
         String serviceName = serviceConfig.getServiceName();
         int retryTimes = 0;
         TTransport transport = null;
-        ServiceInstance instance = null;
+        ThriftServerNode node = null;
         ThriftClientKey key = null;
         while (true) {
             if (++retryTimes > poolConfig.getRetryTimes()) {
@@ -76,21 +71,19 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                 throw new ThriftClientException("客户端调用失败: " + signature);
             }
             try {
-                instance = loadBalancerClient.choose(serviceName);
-                if (isNull(instance)) {
+                node = clientConfigure.chooseServerNode(serviceName);
+                if (isNull(node)) {
                     log.warn("[LoadBalancer] 未找到可用的thrift服务: [{}]", serviceName);
                     continue;
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug("[LoadBalancer] 获取负载服务节点: [id:{}, name:{}, host:{}, port:{}]",
-                            instance.getInstanceId(), instance.getServiceId(), instance.getHost(), instance.getPort());
+                    log.debug("[LoadBalancer] 获取负载服务节点: [host:{}, port:{}]", node.getHost(), node.getPort());
                 }
 
-                key = new ThriftClientKey(signature, serviceName, instance.getHost(), instance.getPort());
+                key = new ThriftClientKey(signature, serviceName, node.getHost(), node.getPort());
                 transport = transportPool.borrowObject(key);
-                TProtocol protocol = new TCompactProtocol(transport);
-                TMultiplexedProtocol multiplexedProtocol = new TMultiplexedProtocol(protocol, signatureGenerator.generate(serviceSignature));
-                Object client = clientConstructor.newInstance(multiplexedProtocol);
+                TProtocol protocol = clientConfigure.determineTProtocol(transport, signature);
+                Object client = clientConstructor.newInstance(protocol);
                 return method.invoke(client, args);
 
             } catch (IllegalArgumentException | IllegalAccessException | InstantiationException | SecurityException | NoSuchMethodException e) {
@@ -104,7 +97,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                         if (transport != null) {
                             transport.close();
                         }
-                        log.error("[ThriftClient] 请求超时, server: [host:{},port:{}]", instance.getHost(), instance.getPort());
+                        log.error("[ThriftClient] 请求超时, server: [host:{},port:{}]", node.getHost(), node.getPort());
                         // 超时 直接抛出，不进行重试
                         throw new ThriftClientException("Thrift client request timeout", e);
 

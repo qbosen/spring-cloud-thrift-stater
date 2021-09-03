@@ -1,4 +1,4 @@
-package top.abosen.thrift.common.signature;
+package top.abosen.thrift.common;
 
 import lombok.Value;
 
@@ -12,5 +12,4 @@ public class ServiceSignature {
     String serviceName;
     Class<?> serviceClass;
     double version;
-
 }
