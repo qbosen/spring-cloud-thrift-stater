@@ -3,9 +3,8 @@ package top.abosen.thrift.server.wrapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
-import top.abosen.thrift.common.Utils;
 import top.abosen.thrift.common.ServiceSignature;
-import top.abosen.thrift.common.signature.ServiceSignatureGenerator;
+import top.abosen.thrift.common.Utils;
 import top.abosen.thrift.server.annotation.ThriftService;
 
 /**
@@ -19,10 +18,6 @@ import top.abosen.thrift.server.annotation.ThriftService;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ThriftServiceWrapper {
     /**
-     * 服务签名，用于唯一标示一个服务
-     */
-    String signature;
-    /**
      * 被wrapper对象的源类型 (代理前)， 即被 {@link ThriftService} 注解的类
      */
     Class<?> targetType;
@@ -35,17 +30,23 @@ public class ThriftServiceWrapper {
      */
     Object target;
 
-    ServiceSignature serviceSignature;
+    double version;
 
-    public static ThriftServiceWrapper of(String serverName, Object thriftService, double version, ServiceSignatureGenerator signatureGenerator) {
+
+    public static ThriftServiceWrapper of(Object thriftService, double version) {
         if (version <= 0) {
             throw new IllegalArgumentException("Thrift service version must be positive: " + version);
         }
 
         Class<?> ifaceType = Utils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
                 .orElseThrow(() -> new IllegalStateException("No thrift IFace found on service"));
-        ServiceSignature serviceSignature = new ServiceSignature(serverName, ifaceType.getEnclosingClass(), version);
-        String signature = signatureGenerator.generate(serviceSignature);
-        return new ThriftServiceWrapper(signature, thriftService.getClass(), ifaceType, thriftService, serviceSignature);
+        return new ThriftServiceWrapper(thriftService.getClass(), ifaceType, thriftService, version);
+    }
+
+    /**
+     * ThriftServiceWrapper 是业务信息，与服务配置、服务名解绑。达到同样的业务应用在不同服务的目的（同样的业务应用在不同的服务端协议）
+     */
+    public ServiceSignature serviceSignature(String serverName) {
+        return new ServiceSignature(serverName, ifaceType.getEnclosingClass(), version);
     }
 }

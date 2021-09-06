@@ -10,6 +10,8 @@ import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TServerSocket;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
+import top.abosen.thrift.common.ServiceSignature;
+import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 
@@ -27,7 +29,8 @@ import java.util.stream.Stream;
  */
 public class ThriftServerModeManager {
     @SneakyThrows
-    public static TServer createServerWithMode(ThriftServerProperties properties, List<ThriftServiceWrapper> serviceWrappers) {
+    public static TServer createServerWithMode(
+            ThriftServerProperties.Service properties, ThriftServerConfigure serviceConfigure, List<ThriftServiceWrapper> serviceWrappers) {
         TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
         for (ThriftServiceWrapper serviceWrapper : serviceWrappers) {
             Object bean = serviceWrapper.getTarget();
@@ -52,17 +55,25 @@ public class ThriftServerModeManager {
             Constructor<TProcessor> processorConstructor = processorClass.getConstructor(ifaceClass);
 
             TProcessor singleProcessor = BeanUtils.instantiateClass(processorConstructor, bean);
-            String serviceSignature = serviceWrapper.getSignature();
-            multiplexedProcessor.registerProcessor(serviceSignature, singleProcessor);
+            ServiceSignature serviceSignature = serviceWrapper.serviceSignature(properties.getServiceName());
+            multiplexedProcessor.registerProcessor(serviceConfigure.generateSignature(serviceSignature), singleProcessor);
         }
 
+        return serviceConfigure.determineTServer(properties, multiplexedProcessor);
+    }
+
+    /**
+     * 默认的 TServer 构造方式
+     */
+    @SneakyThrows
+    public static TServer determineTServer(ThriftServerProperties.Service properties, TProcessor processor) {
         switch (properties.getServiceMode()) {
             case SIMPLE: {
                 TServerSocket serverSocket = new TServerSocket(properties.getServicePort());
                 TServer.Args args = new TSimpleServer.Args(serverSocket)
                         .transportFactory(new TFastFramedTransport.Factory())
                         .protocolFactory(new TCompactProtocol.Factory())
-                        .processor(multiplexedProcessor);
+                        .processor(processor);
                 return new TSimpleServer(args);
             }
             case NON_BLOCKING: {
@@ -70,7 +81,7 @@ public class ThriftServerModeManager {
                 TNonblockingServer.Args args = new TNonblockingServer.Args(serverSocket)
                         .transportFactory(new TFastFramedTransport.Factory())
                         .protocolFactory(new TCompactProtocol.Factory())
-                        .processor(multiplexedProcessor);
+                        .processor(processor);
                 return new TNonblockingServer(args);
             }
             case THREAD_POOL: {
@@ -88,7 +99,7 @@ public class ThriftServerModeManager {
                                 poolConfig.getKeepAliveTime(),
                                 TimeUnit.SECONDS,
                                 new LinkedBlockingDeque<>(properties.getQueueSize())))
-                        .processor(multiplexedProcessor);
+                        .processor(processor);
                 return new TThreadPoolServer(args);
             }
             case HS_HA: {
@@ -105,7 +116,7 @@ public class ThriftServerModeManager {
                                 hsHaConfig.getKeepAliveTime(),
                                 TimeUnit.SECONDS,
                                 new LinkedBlockingDeque<>(properties.getQueueSize())))
-                        .processor(multiplexedProcessor);
+                        .processor(processor);
                 return new THsHaServer(args);
             }
             case THREADED_SELECTOR: {
@@ -123,7 +134,7 @@ public class ThriftServerModeManager {
                                 selectorConfig.getKeepAliveTime(),
                                 TimeUnit.SECONDS,
                                 new LinkedBlockingDeque<>(properties.getQueueSize())))
-                        .processor(multiplexedProcessor);
+                        .processor(processor);
                 return new TThreadedSelectorServer(args);
             }
             default:

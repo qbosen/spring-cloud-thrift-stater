@@ -3,6 +3,7 @@ package top.abosen.thrift.server.properties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import top.abosen.thrift.common.ServiceMode;
+import top.abosen.thrift.server.ThriftServerAutoConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,12 @@ public class ThriftServerProperties {
          * 服务的工作线程队列容量
          */
         int queueSize = 1000;
+
+        /**
+         * 自定义服务配置bean名称
+         */
+        String configure = ThriftServerAutoConfiguration.DEFAULT_CONFIGURE;
+
         /**
          * 服务模型(单线程/多线程/阻塞/非阻塞) 默认hsHa
          * <p>

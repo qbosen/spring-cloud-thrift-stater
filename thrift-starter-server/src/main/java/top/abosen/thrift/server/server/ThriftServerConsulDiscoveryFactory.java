@@ -1,7 +1,6 @@
 package top.abosen.thrift.server.server;
 
 import com.ecwid.consul.v1.agent.model.NewService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryProperties;
@@ -10,7 +9,6 @@ import org.springframework.cloud.consul.serviceregistry.ConsulAutoRegistration;
 import org.springframework.cloud.consul.serviceregistry.ConsulRegistration;
 import org.springframework.cloud.consul.serviceregistry.ConsulServiceRegistry;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 
 import java.util.ArrayList;
@@ -22,34 +20,32 @@ import java.util.Collections;
  */
 
 @Slf4j
-@RequiredArgsConstructor
-public class ThriftServerConsulDiscovery {
-    final ConsulRegistration consulRegistration;
-    final ConsulServiceRegistry consulServiceRegistry;
-    final boolean shouldRegistered;
-    boolean registered = false;
+public class ThriftServerConsulDiscoveryFactory {
+    private final ConsulServiceRegistry consulServiceRegistry;
+    private final AutoServiceRegistrationProperties autoServiceRegistrationProperties;
+    private final ConsulDiscoveryProperties discoveryProperties;
+    private final ApplicationContext context;
+    private final HeartbeatProperties heartbeatProperties;
 
-    public void registerService() {
-        if (!registered && shouldRegistered) {
-            consulServiceRegistry.register(consulRegistration);
-            this.registered = true;
-        }
-    }
-
-    public void unregisterService() {
-        if (registered) {
-            consulServiceRegistry.deregister(consulRegistration);
-            log.debug("注销服务:{}", consulRegistration.getService().getId());
-        }
-    }
-
-    private static ConsulRegistration createConsulRegistration(
-            ThriftServerProperties.Service serverProperties,
-            ConsulDiscoveryProperties discoveryProperties,
+    public ThriftServerConsulDiscoveryFactory(
+            ConsulServiceRegistry consulServiceRegistry,
             AutoServiceRegistrationProperties autoServiceRegistrationProperties,
+            ConsulDiscoveryProperties discoveryProperties,
             ApplicationContext context,
             HeartbeatProperties heartbeatProperties
     ) {
+        this.consulServiceRegistry = consulServiceRegistry;
+        this.autoServiceRegistrationProperties = autoServiceRegistrationProperties;
+        this.discoveryProperties = discoveryProperties;
+        this.context = context;
+        this.heartbeatProperties = heartbeatProperties;
+    }
+
+    public ThriftServerConsulDiscovery createConsulDiscovery(ThriftServerProperties.Service serviceProperties){
+        return new ThriftServerConsulDiscovery(createConsulRegistration(serviceProperties), consulServiceRegistry, serviceProperties.getDiscovery().isRegister());
+    }
+
+    private ConsulRegistration createConsulRegistration(ThriftServerProperties.Service serverProperties) {
         NewService service = new NewService();
         service.setPort(serverProperties.getServicePort());
         service.setName(serverProperties.getServiceName());

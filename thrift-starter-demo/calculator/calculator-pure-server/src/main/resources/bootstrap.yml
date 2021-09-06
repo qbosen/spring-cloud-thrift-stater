@@ -12,19 +12,20 @@ spring:
         query-passing: true
     thrift:
       server:
-        service-name: calculator-thrift-server
-        service-mode: threaded_selector
-        service-port: 8081
-        queue-size: 1000
-        discovery:
-          register: true
-          health-check: true
-          prefer-ip-address: true
-          instance-id: ${spring.cloud.thrift.server.service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.service-port}
-          tags:
-            - calculator
-            - thrift
-        threaded-selector:
-          min-worker-threads: 5
-          max-worker-threads: 20
-          keep-alive-time: 200
+        services:
+          - service-name: calculator-thrift-server
+            service-mode: threaded_selector
+            service-port: 8081
+            queue-size: 1000
+            discovery:
+              register: true
+              health-check: true
+              prefer-ip-address: true
+              instance-id: ${spring.cloud.thrift.server.services[0].service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.services[0].service-port}
+              tags:
+                - calculator
+                - thrift
+            threaded-selector:
+              min-worker-threads: 5
+              max-worker-threads: 20
+              keep-alive-time: 200

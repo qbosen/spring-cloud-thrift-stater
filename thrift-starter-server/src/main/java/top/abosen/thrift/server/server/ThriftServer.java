@@ -4,11 +4,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.server.TServer;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.SmartLifecycle;
+import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 
@@ -24,43 +22,37 @@ import java.util.List;
 @Getter
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class ThriftServer implements SmartLifecycle, ApplicationContextAware {
+public class ThriftServer {
     final TServer server;
-    final ThriftServerProperties properties;
+    final ThriftServerProperties.Service properties;
     final List<ThriftServiceWrapper> serviceWrappers;
+    final ThriftServerConsulDiscovery consulDiscovery;
 
-    ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+    public static ThriftServer createServer(
+            ThriftServerProperties.Service properties,
+            ThriftServerConfigure serverConfigure,
+            ThriftServerConsulDiscoveryFactory discoveryFactory,
+            List<ThriftServiceWrapper> serviceWrappers) {
+        TServer server = ThriftServerModeManager.createServerWithMode(properties, serverConfigure, serviceWrappers);
+        return new ThriftServer(server, properties, serviceWrappers, discoveryFactory.createConsulDiscovery(properties));
     }
 
-    public static ThriftServer createServer(ThriftServerProperties properties, List<ThriftServiceWrapper> serviceWrappers) {
-        TServer server = ThriftServerModeManager.createServerWithMode(properties, serviceWrappers);
-        return new ThriftServer(server, properties, serviceWrappers);
-    }
-
-    @Override public boolean isAutoStartup() {
-        return true;
-    }
-
-    @Override
-    public void start() {
+    public void start(String threadName) {
         log.debug("Starting thrift server [{}]", properties.getServiceName());
-        new Thread(server::serve, "thrift-server-thread").start();
+        new Thread(server::serve, StringUtils.isNotEmpty(threadName) ? threadName : "thrift-server-thread").start();
+        consulDiscovery.registerService();
         log.debug("Thrift server[{}] is started", properties.getServiceName());
-        applicationContext.publishEvent(new ThriftServerStartEvent(applicationContext));
     }
 
-    @Override public void stop() {
+    public void stop() {
         log.debug("Stopping thrift server [{}]", properties.getServiceName());
         server.stop();
+        consulDiscovery.unregisterService();
         log.debug("Thrift server[{}] is stopped", properties.getServiceName());
-        applicationContext.publishEvent(new ThriftServerStopEvent(applicationContext));
     }
 
-    @Override public boolean isRunning() {
+    public boolean isRunning() {
         return server.isServing();
     }
 }
