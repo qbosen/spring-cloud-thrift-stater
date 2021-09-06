@@ -29,7 +29,24 @@ spring:
               register: true
               health-check: true
               prefer-ip-address: true
-              instance-id: ${spring.cloud.thrift.server.service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.service-port}
+              instance-id: ${spring.cloud.thrift.server.services[0].service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.services[0].service-port}
+              tags:
+                - calculator
+                - thrift
+            threaded-selector:
+              min-worker-threads: 5
+              max-worker-threads: 20
+              keep-alive-time: 200
+          - service-name: calculator-thrift-server-old
+            service-mode: threaded_selector
+            service-port: 8082
+            queue-size: 1000
+            configure: compatible
+            discovery:
+              register: true
+              health-check: true
+              prefer-ip-address: true
+              instance-id: ${spring.cloud.thrift.server.services[1].service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.services[1].service-port}
               tags:
                 - calculator
                 - thrift

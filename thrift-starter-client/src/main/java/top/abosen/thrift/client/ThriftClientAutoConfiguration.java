@@ -14,10 +14,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
 import top.abosen.thrift.client.pool.TransportKeyedPooledObjectFactory;
+import top.abosen.thrift.client.properties.CompatibleThriftClientConfigure;
 import top.abosen.thrift.client.properties.DefaultThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
+import top.abosen.thrift.common.Constants;
 
 /**
  * @author qiubaisen
@@ -31,10 +33,14 @@ import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
 @EnableConfigurationProperties(ThriftClientProperties.class)
 public class ThriftClientAutoConfiguration {
 
-    @Bean
-    @ConditionalOnSingleCandidate
+    @Bean(Constants.DEFAULT_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
     public ThriftClientConfigure defaultClientConfigure(LoadBalancerClient loadBalancerClient) {
         return new DefaultThriftClientConfigure(loadBalancerClient);
+    }
+
+    @Bean(Constants.COMPATIBLE_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
+    public ThriftClientConfigure compatibleClientConfigure(LoadBalancerClient loadBalancerClient) {
+        return new CompatibleThriftClientConfigure(loadBalancerClient);
     }
 
     @Bean

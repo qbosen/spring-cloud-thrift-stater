@@ -6,6 +6,7 @@ dependencyManagement {
 
 dependencies {
     api("org.apache.thrift:libthrift:$thriftVersion")
+    api('jakarta.annotation:jakarta.annotation-api:1.3.5')
 }
 
 def thriftGenPath = "$buildDir/generated/sources/thrift/java/main" as String
@@ -28,7 +29,7 @@ task genThrift(group: 'build') {
         }
     }
 }
-compileJava.dependsOn genThrift
+//compileJava.dependsOn genThrift
 sourceSets.main.java.srcDirs += thriftGenPath
 idea.module.sourceDirs += file(thriftGenPath)
 jar { enabled = true }

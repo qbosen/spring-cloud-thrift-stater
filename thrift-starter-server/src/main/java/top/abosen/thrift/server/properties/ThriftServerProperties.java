@@ -2,8 +2,8 @@ package top.abosen.thrift.server.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.common.ServiceMode;
-import top.abosen.thrift.server.ThriftServerAutoConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class ThriftServerProperties {
         /**
          * 自定义服务配置bean名称
          */
-        String configure = ThriftServerAutoConfiguration.DEFAULT_CONFIGURE;
+        String configure = Constants.DEFAULT_CONFIGURE;
 
         /**
          * 服务模型(单线程/多线程/阻塞/非阻塞) 默认hsHa
@@ -56,6 +56,10 @@ public class ThriftServerProperties {
         ThreadPool threadPool = new ThreadPool();
         HsHa hsHa = new HsHa();
         ThreadedSelector threadedSelector = new ThreadedSelector();
+
+        public String getConfigureBeanName() {
+            return configure + Constants.CONFIGURE_BEAN_SUFFIX;
+        }
     }
 
     @Data

@@ -7,7 +7,6 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.serviceregistry.AutoServiceRegistrationProperties;
 import org.springframework.cloud.consul.ConditionalOnConsulEnabled;
@@ -20,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.server.annotation.ThriftService;
 import top.abosen.thrift.server.exception.ThriftServerException;
+import top.abosen.thrift.server.properties.CompatibleThriftServerConfigure;
 import top.abosen.thrift.server.properties.DefaultThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
@@ -41,17 +41,20 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@ConditionalOnProperty(value = Constants.SERVER_SERVICE_NAME, matchIfMissing = false)
 @EnableConfigurationProperties(ThriftServerProperties.class)
 @RequiredArgsConstructor
 public class ThriftServerAutoConfiguration {
 
-    public static final String DEFAULT_CONFIGURE = "defaultThriftServerConfigure";
-
-    @Bean(name = DEFAULT_CONFIGURE)
+    @Bean(name = Constants.DEFAULT_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
     @ConditionalOnMissingBean
     public DefaultThriftServerConfigure defaultThriftServerConfigure() {
         return new DefaultThriftServerConfigure();
+    }
+
+    @Bean(name = Constants.COMPATIBLE_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
+    @ConditionalOnMissingBean
+    public CompatibleThriftServerConfigure compatibleThriftServerConfigure() {
+        return new CompatibleThriftServerConfigure();
     }
 
     @Bean
@@ -64,14 +67,15 @@ public class ThriftServerAutoConfiguration {
         // 检查配置类
         Map<String, ThriftServerConfigure> configureMap = new HashMap<>();
         for (ThriftServerProperties.Service service : properties.getServices()) {
-            if (!applicationContext.containsBean(service.getConfigure())) {
+            String configureBeanName = service.getConfigureBeanName();
+            if (!applicationContext.containsBean(configureBeanName)) {
                 throw new ThriftServerException(String.format("服务 [%s] 指定的配置bean [%s] 不存在",
-                        service.getServiceName(), service.getConfigure()));
+                        service.getServiceName(), configureBeanName));
             }
-            Object configure = applicationContext.getBean(service.getConfigure());
+            Object configure = applicationContext.getBean(configureBeanName);
             if (!(configure instanceof ThriftServerConfigure)) {
                 throw new ThriftServerException(String.format("服务 [%s] 指定的配置bean [%s] 不是一个有效的 ThriftServerConfigure 类型",
-                        service.getServiceName(), service.getConfigure()));
+                        service.getServiceName(), configureBeanName));
             }
             configureMap.put(service.getConfigure(), ((ThriftServerConfigure) configure));
         }
@@ -101,10 +105,16 @@ public class ThriftServerAutoConfiguration {
         // 对每一个服务配置 都加载这些业务
         List<ThriftServer> thriftServers = properties.getServices().stream()
                 .map(serviceProperties -> ThriftServer.createServer(serviceProperties,
-                        configureMap.get(serviceProperties.getConfigure()),discoveryFactory, serviceWrappers))
+                        configureMap.get(serviceProperties.getConfigure()), discoveryFactory, serviceWrappers))
                 .collect(Collectors.toList());
 
         return new ThriftServerGroup(thriftServers);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ThriftServerBootstrap thriftServerBootstrap(ThriftServerGroup thriftServerGroup) {
+        return new ThriftServerBootstrap(thriftServerGroup);
     }
 
     @Bean
