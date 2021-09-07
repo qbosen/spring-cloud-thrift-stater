@@ -9,6 +9,9 @@ import top.abosen.thrift.common.ServiceSignature;
  * @date 2021/9/6
  */
 public interface ThriftServerConfigure {
+
+    String configureName();
+
     /**
      * 从服务标示信息中生成签名key
      *

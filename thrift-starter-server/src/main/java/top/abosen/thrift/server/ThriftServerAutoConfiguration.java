@@ -3,6 +3,7 @@ package top.abosen.thrift.server;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -16,22 +17,17 @@ import org.springframework.cloud.consul.serviceregistry.ConsulServiceRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.server.annotation.ThriftService;
 import top.abosen.thrift.server.exception.ThriftServerException;
-import top.abosen.thrift.server.properties.CompatibleThriftServerConfigure;
-import top.abosen.thrift.server.properties.DefaultThriftServerConfigure;
-import top.abosen.thrift.server.properties.ThriftServerConfigure;
-import top.abosen.thrift.server.properties.ThriftServerProperties;
+import top.abosen.thrift.server.properties.*;
 import top.abosen.thrift.server.server.ThriftServer;
 import top.abosen.thrift.server.server.ThriftServerConsulDiscoveryFactory;
 import top.abosen.thrift.server.server.ThriftServerGroup;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,39 +41,46 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ThriftServerAutoConfiguration {
 
-    @Bean(name = Constants.DEFAULT_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
-    @ConditionalOnMissingBean
-    public DefaultThriftServerConfigure defaultThriftServerConfigure() {
+    @Bean
+    public ThriftServerConfigure defaultThriftServerConfigure() {
         return new DefaultThriftServerConfigure();
     }
 
-    @Bean(name = Constants.COMPATIBLE_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
-    @ConditionalOnMissingBean
-    public CompatibleThriftServerConfigure compatibleThriftServerConfigure() {
+    @Bean
+    public ThriftServerConfigure compatibleThriftServerConfigure() {
         return new CompatibleThriftServerConfigure();
     }
+
+
+    @Bean ThriftServerConfigureWrapper thriftServerConfigure(List<ThriftServerConfigure> configureList, ThriftServerProperties serverProperties) {
+        if (CollectionUtils.isEmpty(configureList)) {
+            throw new ThriftServerException("没有相关的 ThriftServerConfigure 配置");
+        }
+        if (CollectionUtils.isEmpty(serverProperties.getServices())) {
+            throw new ThriftServerException("没有相关服务的服务配置, 检查: spring.cloud.thrift.server.services");
+        }
+        serverProperties.getServices().stream()
+                .filter(p -> configureList.stream().noneMatch(c -> Objects.equals(p.getConfigure(), c.configureName())))
+                .findAny().ifPresent(prop -> {
+                    throw new ThriftServerException(String.format("未找到服务[%s]相关的 ThriftServerConfigure 配置[%s]", prop.getServiceName(),
+                            prop.getConfigure()));
+                });
+        if (configureList.stream().map(ThriftServerConfigure::configureName).filter(StringUtils::isNoneBlank).distinct().count() != configureList.size()) {
+            throw new ThriftServerException("存在无效的 ConfigureName");
+        }
+        return new ThriftServerConfigureWrapper(configureList);
+    }
+
 
     @Bean
     @ConditionalOnMissingBean
     public ThriftServerGroup thriftServerGroup(
-            ThriftServerProperties properties, ThriftServerConsulDiscoveryFactory discoveryFactory, ApplicationContext applicationContext) {
+            ThriftServerProperties properties,
+            ThriftServerConsulDiscoveryFactory discoveryFactory,
+            ThriftServerConfigureWrapper serverConfigureWrapper,
+            ApplicationContext applicationContext) {
         if (CollectionUtils.isEmpty(properties.getServices())) {
             throw new ThriftServerException("没有相关服务的服务配置, 检查: spring.cloud.thrift.server.services");
-        }
-        // 检查配置类
-        Map<String, ThriftServerConfigure> configureMap = new HashMap<>();
-        for (ThriftServerProperties.Service service : properties.getServices()) {
-            String configureBeanName = service.getConfigureBeanName();
-            if (!applicationContext.containsBean(configureBeanName)) {
-                throw new ThriftServerException(String.format("服务 [%s] 指定的配置bean [%s] 不存在",
-                        service.getServiceName(), configureBeanName));
-            }
-            Object configure = applicationContext.getBean(configureBeanName);
-            if (!(configure instanceof ThriftServerConfigure)) {
-                throw new ThriftServerException(String.format("服务 [%s] 指定的配置bean [%s] 不是一个有效的 ThriftServerConfigure 类型",
-                        service.getServiceName(), configureBeanName));
-            }
-            configureMap.put(service.getConfigure(), ((ThriftServerConfigure) configure));
         }
 
         // 获取所有服务业务
@@ -105,7 +108,9 @@ public class ThriftServerAutoConfiguration {
         // 对每一个服务配置 都加载这些业务
         List<ThriftServer> thriftServers = properties.getServices().stream()
                 .map(serviceProperties -> ThriftServer.createServer(serviceProperties,
-                        configureMap.get(serviceProperties.getConfigure()), discoveryFactory, serviceWrappers))
+                        serverConfigureWrapper.getConfigure(serviceProperties.getConfigure()),
+                        discoveryFactory,
+                        serviceWrappers))
                 .collect(Collectors.toList());
 
         return new ThriftServerGroup(thriftServers);
@@ -137,4 +142,5 @@ public class ThriftServerAutoConfiguration {
                 context,
                 heartbeatProperties);
     }
+
 }

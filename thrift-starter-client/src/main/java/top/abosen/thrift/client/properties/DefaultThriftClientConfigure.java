@@ -8,6 +8,7 @@ import org.apache.thrift.transport.TTransport;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import top.abosen.thrift.client.pool.ThriftServerNode;
 import top.abosen.thrift.client.pool.ThriftTransportFactory;
+import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.common.ServiceMode;
 import top.abosen.thrift.common.ServiceSignature;
 
@@ -21,6 +22,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DefaultThriftClientConfigure implements ThriftClientConfigure {
     protected final LoadBalancerClient loadBalancerClient;
+
+    @Override public String configureName() {
+        return Constants.DEFAULT_CONFIGURE;
+    }
 
     @Override public String generateSignature(ServiceSignature signature) {
         return String.join("$",

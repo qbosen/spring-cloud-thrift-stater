@@ -2,6 +2,7 @@ package top.abosen.thrift.client.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import top.abosen.thrift.common.Constants;
 import top.abosen.thrift.common.ServiceMode;
 
 import java.util.Collections;
@@ -21,6 +22,7 @@ public class ThriftClientProperties {
     @Data
     public static class Service {
         String serviceName = "";
+        String configure = Constants.DEFAULT_CONFIGURE;
         ServiceMode serviceMode = ServiceMode.DEFAULT;
         String packageToScan = "";
     }

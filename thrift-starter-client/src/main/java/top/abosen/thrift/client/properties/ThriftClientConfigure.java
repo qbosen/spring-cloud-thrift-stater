@@ -11,6 +11,14 @@ import top.abosen.thrift.common.ServiceSignature;
  * @date 2021/9/3
  */
 public interface ThriftClientConfigure {
+
+    /**
+     * 唯一的clientConfigure名称
+     *
+     * @return configure 名称
+     */
+    String configureName();
+
     /**
      * 从服务标示信息中生成签名key
      *

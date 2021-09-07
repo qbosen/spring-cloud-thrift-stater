@@ -37,7 +37,7 @@ spring:
               min-worker-threads: 5
               max-worker-threads: 20
               keep-alive-time: 200
-          - service-name: calculator-thrift-server-old
+          - service-name: calculator-thrift-server-compatible
             service-mode: threaded_selector
             service-port: 8082
             queue-size: 1000

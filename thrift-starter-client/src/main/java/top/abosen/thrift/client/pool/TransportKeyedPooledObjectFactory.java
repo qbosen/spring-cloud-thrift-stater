@@ -9,7 +9,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import top.abosen.thrift.client.exception.ThriftClientException;
-import top.abosen.thrift.client.properties.ThriftClientConfigure;
+import top.abosen.thrift.client.properties.ThriftClientConfigureWrapper;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 
 import java.util.Objects;
@@ -23,11 +23,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFactory<ThriftClientKey, TTransport> {
 
-    final ThriftClientConfigure clientConfigure;
+    final ThriftClientConfigureWrapper clientConfigureWrapper;
     final ThriftClientProperties properties;
 
     @Override
-    public TTransport create(ThriftClientKey key) throws Exception {
+    public TTransport create(ThriftClientKey key) {
         ThriftServerNode node = key.getNode();
         if (StringUtils.isBlank(node.getHost())) {
             throw new ThriftClientException("Invalid Thrift server, node IP address: " + node.getHost());
@@ -46,7 +46,8 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
                 .map(ThriftClientProperties.Pool::getConnectTimeout)
                 .filter(it -> it > 0).orElse(30);
 
-        TTransport transport = clientConfigure.determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout);
+        TTransport transport = clientConfigureWrapper.getConfigure(key.getConfigure())
+                .determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout);
 
         try {
             transport.open();

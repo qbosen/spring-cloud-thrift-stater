@@ -8,6 +8,7 @@ import org.apache.thrift.server.*;
 import org.apache.thrift.transport.TFastFramedTransport;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TTransportFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
 import top.abosen.thrift.common.ServiceSignature;
@@ -71,7 +72,7 @@ public class ThriftServerModeManager {
             case SIMPLE: {
                 TServerSocket serverSocket = new TServerSocket(properties.getServicePort());
                 TServer.Args args = new TSimpleServer.Args(serverSocket)
-                        .transportFactory(new TFastFramedTransport.Factory())
+                        .transportFactory(new TTransportFactory())
                         .protocolFactory(new TCompactProtocol.Factory())
                         .processor(processor);
                 return new TSimpleServer(args);
@@ -88,7 +89,7 @@ public class ThriftServerModeManager {
                 ThriftServerProperties.ThreadPool poolConfig = properties.getThreadPool();
                 TServerSocket serverSocket = new TServerSocket(properties.getServicePort());
                 TThreadPoolServer.Args args = new TThreadPoolServer.Args(serverSocket)
-                        .transportFactory(new TFastFramedTransport.Factory())
+                        .transportFactory(new TTransportFactory())
                         .protocolFactory(new TCompactProtocol.Factory())
                         .minWorkerThreads(poolConfig.getMinWorkerThreads())
                         .maxWorkerThreads(poolConfig.getMaxWorkerThreads())

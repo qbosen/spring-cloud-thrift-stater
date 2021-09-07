@@ -20,7 +20,9 @@ task genThrift(group: 'build') {
     doLast {
         exec {
             workingDir "$project.projectDir"
-            commandLine 'thrift', '--gen', 'java', '-out', thriftGenPath, '-r', 'src/main/thrift/calculator.thrift'
+            def thriftCmd = '/usr/local/opt/thrift@0.9/bin/thrift'
+
+            commandLine thriftCmd, '--gen', 'java', '-out', thriftGenPath, '-r', "$projectDir/src/main/thrift/calculator.thrift"
             logger.quiet('Generate thrift files...')
             standardOutput = new ByteArrayOutputStream()
             ext.output = {

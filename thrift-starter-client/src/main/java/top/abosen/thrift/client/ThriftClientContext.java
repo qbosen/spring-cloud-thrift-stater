@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
 import top.abosen.thrift.client.properties.ThriftClientConfigure;
+import top.abosen.thrift.client.properties.ThriftClientConfigureWrapper;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 
 /**
@@ -23,18 +24,18 @@ public class ThriftClientContext {
 
     ThriftClientProperties properties;
     TransportKeyedObjectPool objectPool;
-    ThriftClientConfigure clientConfigure;
+    ThriftClientConfigureWrapper clientConfigureWrapper;
 
     public static synchronized ThriftClientContext init(
             ThriftClientProperties properties,
             TransportKeyedObjectPool objectPool,
-            ThriftClientConfigure clientConfigure) {
+            ThriftClientConfigureWrapper clientConfigureWrapper) {
         if (CONTEXT.init) {
             throw new ThriftClientException("不可重复初始化");
         }
         CONTEXT.properties = properties;
         CONTEXT.objectPool = objectPool;
-        CONTEXT.clientConfigure = clientConfigure;
+        CONTEXT.clientConfigureWrapper = clientConfigureWrapper;
 
         CONTEXT.init = true;
         return CONTEXT;

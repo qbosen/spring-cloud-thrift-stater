@@ -1,25 +1,27 @@
 package top.abosen.thrift.client;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.thrift.transport.TTransport;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.CommonsClientAutoConfiguration;
 import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.loadbalancer.config.BlockingLoadBalancerClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
 import top.abosen.thrift.client.pool.TransportKeyedPooledObjectFactory;
-import top.abosen.thrift.client.properties.CompatibleThriftClientConfigure;
-import top.abosen.thrift.client.properties.DefaultThriftClientConfigure;
-import top.abosen.thrift.client.properties.ThriftClientConfigure;
-import top.abosen.thrift.client.properties.ThriftClientProperties;
+import top.abosen.thrift.client.properties.*;
 import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
-import top.abosen.thrift.common.Constants;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author qiubaisen
@@ -28,20 +30,36 @@ import top.abosen.thrift.common.Constants;
 
 @Configuration
 @ConditionalOnDiscoveryEnabled
-@AutoConfigureAfter(CommonsClientAutoConfiguration.class)
+@AutoConfigureAfter({CommonsClientAutoConfiguration.class, BlockingLoadBalancerClientAutoConfiguration.class})
 @AutoConfigureOrder(Integer.MAX_VALUE)
 @EnableConfigurationProperties(ThriftClientProperties.class)
 public class ThriftClientAutoConfiguration {
 
-    @Bean(Constants.DEFAULT_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
+    @Bean
     public ThriftClientConfigure defaultClientConfigure(LoadBalancerClient loadBalancerClient) {
         return new DefaultThriftClientConfigure(loadBalancerClient);
     }
 
-    @Bean(Constants.COMPATIBLE_CONFIGURE + Constants.CONFIGURE_BEAN_SUFFIX)
+    @Bean
     public ThriftClientConfigure compatibleClientConfigure(LoadBalancerClient loadBalancerClient) {
         return new CompatibleThriftClientConfigure(loadBalancerClient);
     }
+
+    @Bean ThriftClientConfigureWrapper thriftClientConfigure(List<ThriftClientConfigure> configureList, ThriftClientProperties clientProperties) {
+        if (CollectionUtils.isEmpty(configureList)) {
+            throw new ThriftClientException("没有相关的 ThriftClientConfigure 配置");
+        }
+        clientProperties.getServices().stream()
+                .filter(p -> configureList.stream().noneMatch(c -> Objects.equals(p.getConfigure(), c.configureName())))
+                .findAny().ifPresent(prop -> {
+                    throw new ThriftClientException(String.format("未找到服务[%s]相关的 ThriftClientConfigure 配置[%s]", prop.getServiceName(), prop.getConfigure()));
+                });
+        if (configureList.stream().map(ThriftClientConfigure::configureName).filter(StringUtils::isNoneBlank).distinct().count() != configureList.size()) {
+            throw new ThriftClientException("存在无效的 ConfigureName");
+        }
+        return new ThriftClientConfigureWrapper(configureList);
+    }
+
 
     @Bean
     @ConditionalOnMissingBean
@@ -52,8 +70,9 @@ public class ThriftClientAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public TransportKeyedPooledObjectFactory transportKeyedPooledObjectFactory(ThriftClientConfigure thriftClientConfigure, ThriftClientProperties clientProperties) {
-        return new TransportKeyedPooledObjectFactory(thriftClientConfigure, clientProperties);
+    public TransportKeyedPooledObjectFactory transportKeyedPooledObjectFactory(
+            ThriftClientConfigureWrapper clientConfigureWrapper, ThriftClientProperties clientProperties) {
+        return new TransportKeyedPooledObjectFactory(clientConfigureWrapper, clientProperties);
     }
 
     @Bean
@@ -85,8 +104,8 @@ public class ThriftClientAutoConfiguration {
     public ThriftClientContext thriftClientContext(
             ThriftClientProperties properties,
             TransportKeyedObjectPool objectPool,
-            ThriftClientConfigure thriftClientConfigure
+            ThriftClientConfigureWrapper clientConfigureWrapper
     ) {
-        return ThriftClientContext.init(properties, objectPool, thriftClientConfigure);
+        return ThriftClientContext.init(properties, objectPool, clientConfigureWrapper);
     }
 }

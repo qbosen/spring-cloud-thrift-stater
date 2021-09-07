@@ -56,10 +56,6 @@ public class ThriftServerProperties {
         ThreadPool threadPool = new ThreadPool();
         HsHa hsHa = new HsHa();
         ThreadedSelector threadedSelector = new ThreadedSelector();
-
-        public String getConfigureBeanName() {
-            return configure + Constants.CONFIGURE_BEAN_SUFFIX;
-        }
     }
 
     @Data

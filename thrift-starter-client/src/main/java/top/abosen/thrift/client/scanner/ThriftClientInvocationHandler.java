@@ -13,6 +13,7 @@ import top.abosen.thrift.client.pool.ThriftClientKey;
 import top.abosen.thrift.client.pool.ThriftServerNode;
 import top.abosen.thrift.client.pool.TransportKeyedObjectPool;
 import top.abosen.thrift.client.properties.ThriftClientConfigure;
+import top.abosen.thrift.client.properties.ThriftClientConfigureWrapper;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
 import top.abosen.thrift.common.ServiceSignature;
 
@@ -38,7 +39,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
     // 延迟缓存属性
     ThriftClientProperties.Pool poolConfig;
     TransportKeyedObjectPool transportPool;
-    ThriftClientConfigure clientConfigure;
+    ThriftClientConfigureWrapper clientConfigureWrapper;
 
     public ThriftClientInvocationHandler(
             ServiceSignature serviceSignature,
@@ -52,12 +53,13 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
 
     @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 延迟设置
-        if (isNull(clientConfigure) || isNull(poolConfig) || isNull(transportPool)) {
+        if (isNull(clientConfigureWrapper) || isNull(poolConfig) || isNull(transportPool)) {
             ThriftClientContext context = ThriftClientContext.context();
             this.poolConfig = context.getProperties().getPool();
             this.transportPool = context.getObjectPool();
-            this.clientConfigure = context.getClientConfigure();
+            this.clientConfigureWrapper = context.getClientConfigureWrapper();
         }
+        ThriftClientConfigure clientConfigure = clientConfigureWrapper.getConfigure(serviceConfig.getConfigure());
 
         String signature = clientConfigure.generateSignature(serviceSignature);
         String serviceName = serviceConfig.getServiceName();
@@ -80,7 +82,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                     log.debug("[LoadBalancer] 获取负载服务节点: [host:{}, port:{}]", node.getHost(), node.getPort());
                 }
 
-                key = new ThriftClientKey(signature, serviceName, node.getHost(), node.getPort());
+                key = new ThriftClientKey(signature, serviceName,serviceConfig.getConfigure(), node.getHost(), node.getPort());
                 transport = transportPool.borrowObject(key);
                 TProtocol protocol = clientConfigure.determineTProtocol(transport, signature);
                 Object client = clientConstructor.newInstance(protocol);
