@@ -21,18 +21,23 @@
 3. 支持与`Spring Cloud Consul`集成，客户端通过心跳检测与服务注册中心`Consul`保持连接，动态定时的刷新服务列表、监测服务的启用、关闭和健康状态。
 4. 支持与`Spring Cloud LoadBalancer`集成，支持客户端负载均衡，使用轮询的负载均衡策略，客户端的`Thrift`程序通过本地的服务缓存列表实现调用的动态转发。
 
-> 兼容模式
->
-> 提供了默认的 configure = compatible, 支持老服务的兼容模式
->
-> 1. 签名方式使用 `serviceClass.getSimpleName()` 存在重复的风险
-> 2. 传输协议使用 `TBinaryProtocal` 性能更低
-> 3. 服务是如果以 `api` 结尾的服务，则端口`+1`
-> 4. 服务端模式需要配置为 `thread_pool`
 
 ## 使用
 
 可以参考完整的 [calculator demo](thrift-starter-demo/calculator)
+
+### 自定义`configure`
+
+通过自定义configure可以实现客户端和服务端的高度定制
+
+客户端向`spring` 注册一个 `top.abosen.thrift.client.properties.ThriftClientConfigure` 实现类的`bean`，同时在配置文件中指定 `configure={自定义的configure名称}` 即可配置底层协议。
+
+服务端同理，参考`top.abosen.thrift.server.properties.ThriftServerConfigure`。
+
+内置可参考的实现有:
+
+	* **default**:  `DefaultThriftServerConfigure` <==> `DefaultThriftClientConfigure`
+	* **compatible**: `CompatibleThriftServerConfigure` <==>  `CompatibleThriftClientConfigure`
 
 ### 服务端
 
