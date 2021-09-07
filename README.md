@@ -63,16 +63,23 @@ spring:
     thrift:
       server:
         services:
-          - service-name: calculator-thrift-server 	# 服务注册名称，必填
-            service-mode: threaded_selector				 	# 服务端模式，可选，默认 threaded_selector
-            service-port: 8081											# 服务端端口，必填
-            queue-size: 1000												# 任务队列大小，可选，默认1000
-						# 服务配置，可选，默认default。 通过实现 `ThriftServerConfigure`接口进行自定义配置，内置default/compatible
-						configure: default											
+            # 服务注册名称，必填
+          - service-name: calculator-thrift-server 
+            # 服务端模式，可选，默认 threaded_selector
+            service-mode: threaded_selector 
+            # 服务端端口，必填
+            service-port: 8081
+            # 任务队列大小，可选，默认1000
+            queue-size: 1000
+            # 服务配置，可选，默认default。 通过实现 `ThriftServerConfigure`接口进行自定义配置，内置default/compatible
+            configure: default
             discovery:
-              register: true												# 是否进行服务注册，可选，默认false
-              health-check: true										# 是否进行健康检查，可选，默认true
-              prefer-ip-address: true								# 注册时候使用的地址是ip/host，可选，默认true
+              #是否进行服务注册，可选，默认false
+              register: true# 
+              # 是否进行健康检查，可选，默认true
+              health-check: true
+              # 注册时候使用的地址是ip/host，可选，默认true
+              prefer-ip-address: true
               # 注册使用的实例id，必填
               instance-id: ${spring.cloud.thrift.server.services[0].service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.services[0].service-port}
               # 注册的tag，可选
@@ -84,9 +91,11 @@ spring:
               min-worker-threads: 5
               max-worker-threads: 20
               keep-alive-time: 200
-          - service-name: calculator-thrift-server-compatible			# 对相同业务启动多个thrift服务
+            # 对相同业务启动多个thrift服务  
+          - service-name: calculator-thrift-server-compatible
             service-mode: thread_pool
-            service-port: 8082																		# 不同的服务端口
+            # 不同的服务端口
+            service-port: 8082
             queue-size: 1000
             # 服务配置为内置的兼容模式，参考 `CompatibleThriftServerConfigure` 
             configure: compatible
@@ -182,10 +191,14 @@ spring:
         query-passing: true
     thrift:
       client:
-        pool:                           # 客户端调用池配置，可选
-          retry-times: 3                # 负载调用重试此时
-          connect-timeout: 10000        # socket 超时配置
-          pool-max-total-per-key: 60    # 池化配置
+        # 客户端调用池配置，可选
+        pool:                           
+          # 负载调用重试此时
+          retry-times: 3                
+          # socket 超时配置
+          connect-timeout: 10000        
+          # 池化配置
+          pool-max-total-per-key: 60    
           pool-max-idle-per-key: 40
           pool-min-idle-per-key: 3
           pool-max-wait: 180000
@@ -194,14 +207,19 @@ spring:
           test-on-return: true
           is-test-while-idle: true
         services:
-          - service-name: calculator-thrift-server            # 服务名称 
-          	# 客户端配置，可选，默认default。 通过实现 `ThriftClientConfigure`接口进行自定义配置，内置default/compatible
-            configure: default																
-            service-mode: threaded_selector                   # 服务端模式，默认 threaded_selector
-            package-to-scan: top.abosen.thrift.demo.calculator  # 扫描的iface包路径，多个使用,分割
-          - service-name: other-server                        # 多个服务配置
+          # 服务名称 
+          - service-name: calculator-thrift-server
+          # 客户端配置，可选，默认default。 通过实现 `ThriftClientConfigure`接口进行自定义配置，内置default/compatible
+            configure: default
+            # 服务端模式，默认 threaded_selector
+            service-mode: threaded_selector                   
+            # 扫描的iface包路径，多个使用,分割
+            package-to-scan: top.abosen.thrift.demo.calculator  
+            # 多个服务配置
+          - service-name: other-server  
             package-to-scan: other.server
-            configure: compatible															# 访问兼容模式的服务端
+            # 访问兼容模式的服务端
+            configure: compatible
 ```
 
 #### 3. 代码
