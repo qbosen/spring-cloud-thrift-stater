@@ -5,7 +5,8 @@ dependencyManagement {
 }
 
 dependencies {
-    implementation("org.apache.thrift:libthrift:$thriftVersion")
+    api("org.apache.thrift:libthrift:$thriftVersion")
+    api('jakarta.annotation:jakarta.annotation-api:1.3.5')
 }
 
 def thriftGenPath = "$buildDir/generated/sources/thrift/java/main" as String
@@ -19,7 +20,9 @@ task genThrift(group: 'build') {
     doLast {
         exec {
             workingDir "$project.projectDir"
-            commandLine 'thrift', '--gen', 'java', '-out', thriftGenPath, '-r', 'src/main/thrift/calculator.thrift'
+            def thriftCmd = '/usr/local/opt/thrift@0.9/bin/thrift'
+
+            commandLine thriftCmd, '--gen', 'java', '-out', thriftGenPath, '-r', "$projectDir/src/main/thrift/calculator.thrift"
             logger.quiet('Generate thrift files...')
             standardOutput = new ByteArrayOutputStream()
             ext.output = {
@@ -28,7 +31,7 @@ task genThrift(group: 'build') {
         }
     }
 }
-compileJava.dependsOn genThrift
+//compileJava.dependsOn genThrift
 sourceSets.main.java.srcDirs += thriftGenPath
 idea.module.sourceDirs += file(thriftGenPath)
 jar { enabled = true }

@@ -33,14 +33,14 @@
         <module name="DefaultComesLast"/>
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
-        <module name="ExplicitInitialization"/>
+<!--        <module name="ExplicitInitialization"/>-->
         <module name="MultipleVariableDeclarations"/>
         <module name="NoClone"/>
         <module name="NoFinalizer"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="StringLiteralEquality"/>
-        <module name="UnnecessaryParentheses"/>
+<!--        <module name="UnnecessaryParentheses"/>-->
 
         <!-- Design -->
         <module name="InterfaceIsType"/>

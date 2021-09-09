@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="calculator" type="docker-deploy" factoryName="docker-compose.yml" server-name="166">
+    <deployment type="docker-compose.yml">
+      <settings>
+        <option name="envFilePath" value="" />
+        <option name="envVars">
+          <list>
+            <DockerEnvVarImpl>
+              <option name="name" value="CONSUL_HOST_NAME" />
+              <option name="value" value="consul.calculator.com" />
+            </DockerEnvVarImpl>
+          </list>
+        </option>
+        <option name="sourceFilePath" value="thrift-starter-demo/calculator/docker-compose.yml" />
+        <option name="upExitCodeFromService" value="" />
+        <option name="upTimeout" value="" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

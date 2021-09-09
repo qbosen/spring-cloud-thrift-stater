@@ -1,0 +1,65 @@
+version: "3"
+
+networks:
+  calculator:
+
+services:
+  my-consul:
+    image: consul:latest
+    ports:
+      - "8500:8500"
+    networks:
+      calculator:
+        aliases:
+          - $CONSUL_HOST
+
+  client-a:
+    build:
+      context: ./calculator-client
+    ports:
+      - "8090:8090"
+    environment:
+      CONSUL_HOST: $CONSUL_HOST
+    depends_on:
+      - my-consul
+    networks:
+      calculator:
+
+
+  server-a:
+    build:
+      context: ./calculator-server
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      CONSUL_HOST: $CONSUL_HOST
+    depends_on:
+      - my-consul
+    networks:
+      calculator:
+
+  server-b:
+    build:
+      context: ./calculator-server
+    ports:
+      - "8082:8080"
+      - "8083:8081"
+    environment:
+      CONSUL_HOST: $CONSUL_HOST
+    depends_on:
+      - my-consul
+    networks:
+      calculator:
+
+  server-c:
+    build:
+      context: ./calculator-pure-server
+    ports:
+      - "8084:8081"
+    environment:
+      CONSUL_HOST: $CONSUL_HOST
+    depends_on:
+      - my-consul
+    networks:
+      calculator:

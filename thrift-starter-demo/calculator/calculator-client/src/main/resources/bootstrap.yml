@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: calculator-rest-client
+  cloud:
+    consul:
+      host: "${CONSUL_HOST:localhost}"
+      port: "${CONSUL_PORT:8500}"
+      discovery:
+        enabled: true
+        register: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+        tags:
+          - calculator
+          - http
+        health-check-path: /actuator/health
+        register-health-check: true
+        health-check-interval: 10s
+        query-passing: true
+    thrift:
+      client:
+        pool:
+          retry-times: 2
+        services:
+          - service-name: calculator-thrift-server
+            service-mode: threaded_selector
+            package-to-scan: top.abosen.thrift.demo.calculator

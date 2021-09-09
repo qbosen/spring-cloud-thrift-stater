@@ -5,11 +5,18 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation(project(":thrift-starter-common"))
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-autoconfigure")
     implementation("org.springframework.cloud:spring-cloud-commons")
+    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+
+    implementation("org.apache.thrift:libthrift:$thriftVersion")
     implementation("org.apache.commons:commons-lang3")
     implementation("org.apache.commons:commons-collections4:$commonCollectionVersion")
-    implementation("org.apache.thrift:libthrift:$thriftVersion")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
+
+bootJar { enabled = false }
+jar { enabled = true }

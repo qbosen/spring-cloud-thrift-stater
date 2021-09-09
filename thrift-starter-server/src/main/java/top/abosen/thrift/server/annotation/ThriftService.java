@@ -2,7 +2,7 @@ package top.abosen.thrift.server.annotation;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
-import top.abosen.thrift.server.Constants;
+import top.abosen.thrift.common.Constants;
 
 import java.lang.annotation.*;
 
@@ -19,7 +19,7 @@ import java.lang.annotation.*;
 @Component
 public @interface ThriftService {
     /**
-     * service name / bean name, 不填为默认bean name, 不可重复
+     * bean name
      */
     @AliasFor(annotation = Component.class)
     String value() default "";

@@ -1,7 +1,9 @@
-rootProject.name = 'spring-cloud-thrift-stater'
+rootProject.name = 'spring-cloud-thrift-starter'
 include 'thrift-starter-client'
 include 'thrift-starter-server'
 include 'thrift-starter-demo:calculator:calculator-client'
 include 'thrift-starter-demo:calculator:calculator-iface'
 include 'thrift-starter-demo:calculator:calculator-server'
+include 'thrift-starter-demo:calculator:calculator-pure-server'
+include 'thrift-starter-common'
 
