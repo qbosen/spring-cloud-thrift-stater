@@ -97,7 +97,7 @@ public class ThriftServerAutoConfiguration {
                     }
                     ThriftService thriftService = target.getClass().getAnnotation(ThriftService.class);
 
-                    return ThriftServiceWrapper.of(target, thriftService.version());
+                    return ThriftServiceWrapper.of(target,bean, thriftService.version());
                 }).collect(Collectors.toList());
 
         if (serviceWrappers.isEmpty()) {

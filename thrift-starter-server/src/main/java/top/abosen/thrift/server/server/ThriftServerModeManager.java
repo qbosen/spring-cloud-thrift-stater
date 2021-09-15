@@ -1,6 +1,7 @@
 package top.abosen.thrift.server.server;
 
 import lombok.SneakyThrows;
+import org.apache.thrift.TException;
 import org.apache.thrift.TMultiplexedProcessor;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
@@ -12,11 +13,14 @@ import org.apache.thrift.transport.TTransportFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
 import top.abosen.thrift.common.ServiceSignature;
+import top.abosen.thrift.server.exception.ThriftServerException;
 import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -34,28 +38,46 @@ public class ThriftServerModeManager {
             ThriftServerProperties.Service properties, ThriftServerConfigure serviceConfigure, List<ThriftServiceWrapper> serviceWrappers) {
         TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
         for (ThriftServiceWrapper serviceWrapper : serviceWrappers) {
-            Object bean = serviceWrapper.getTarget();
+            Object target = serviceWrapper.getTarget();
             Class<?> ifaceClass = serviceWrapper.getIfaceType();
 
             if (Objects.isNull(ifaceClass)) {
-                ifaceClass = Stream.of(ClassUtils.getAllInterfaces(bean))
+                ifaceClass = Stream.of(ClassUtils.getAllInterfaces(target))
                         .filter(clazz -> clazz.getName().endsWith("$Iface"))
                         .filter(iFace -> iFace.getDeclaringClass() != null)
                         .findFirst()
                         .orElseThrow(() -> new IllegalStateException("No thrift IFace found on implementation"));
             }
+            final Class<?> finalIface = ifaceClass;
 
             @SuppressWarnings("unchecked")
-            Class<TProcessor> processorClass = Stream.of(ifaceClass.getDeclaringClass().getDeclaredClasses())
+            Class<TProcessor> processorClass = Stream.of(finalIface.getDeclaringClass().getDeclaredClasses())
                     .filter(clazz -> clazz.getName().endsWith("$Processor"))
                     .filter(TProcessor.class::isAssignableFrom)
                     .findFirst()
                     .map(processor -> (Class<TProcessor>) processor)
                     .orElseThrow(() -> new IllegalStateException("No thrift IFace found on implementation"));
 
-            Constructor<TProcessor> processorConstructor = processorClass.getConstructor(ifaceClass);
+            Constructor<TProcessor> processorConstructor = processorClass.getConstructor(finalIface);
 
-            TProcessor singleProcessor = BeanUtils.instantiateClass(processorConstructor, bean);
+            // 异常包装
+            Object wrapTarget = Proxy.newProxyInstance(finalIface.getClassLoader(), new Class[]{finalIface}, (proxy, method, args) -> {
+                try {
+                    return method.invoke(target, args);
+                } catch (IllegalAccessException | IllegalArgumentException e) {
+                    throw new ThriftServerException("服务端调用失败", e);
+                } catch (InvocationTargetException invocationTargetException) {
+                    Throwable e = invocationTargetException.getTargetException();
+                    if (TException.class.isAssignableFrom(e.getClass())) {
+                        // 业务异常
+                        throw e;
+                    }
+                    // 会被 ProcessFunction 捕获并转换为 TApplicationException 再被客户端处理
+                    throw new TException(e);
+                }
+            });
+
+            TProcessor singleProcessor = BeanUtils.instantiateClass(processorConstructor, wrapTarget);
             ServiceSignature serviceSignature = serviceWrapper.serviceSignature(properties.getServiceName());
             multiplexedProcessor.registerProcessor(serviceConfigure.generateSignature(serviceSignature), singleProcessor);
         }

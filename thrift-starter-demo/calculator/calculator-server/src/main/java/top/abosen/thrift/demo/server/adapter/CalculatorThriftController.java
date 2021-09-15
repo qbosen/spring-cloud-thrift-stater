@@ -1,6 +1,8 @@
 package top.abosen.thrift.demo.server.adapter;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.thrift.TApplicationException;
+import org.apache.thrift.TException;
 import top.abosen.thrift.demo.calculator.thrift.CalculatorService;
 import top.abosen.thrift.demo.server.application.CalculatorAppService;
 import top.abosen.thrift.server.annotation.ThriftService;

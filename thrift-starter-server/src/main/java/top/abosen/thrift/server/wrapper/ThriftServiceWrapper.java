@@ -29,18 +29,21 @@ public class ThriftServiceWrapper {
      * thrift服务实现类
      */
     Object target;
-
+    /**
+     * 被spring托管的bean
+     */
+    Object bean;
     double version;
 
 
-    public static ThriftServiceWrapper of(Object thriftService, double version) {
+    public static ThriftServiceWrapper of(Object thriftService, Object bean, double version) {
         if (version <= 0) {
             throw new IllegalArgumentException("Thrift service version must be positive: " + version);
         }
 
         Class<?> ifaceType = Utils.findFirstInterface(thriftService.getClass(), iface -> iface.getName().endsWith("$Iface"))
                 .orElseThrow(() -> new IllegalStateException("No thrift IFace found on service"));
-        return new ThriftServiceWrapper(thriftService.getClass(), ifaceType, thriftService, version);
+        return new ThriftServiceWrapper(thriftService.getClass(), ifaceType, thriftService, bean, version);
     }
 
     /**

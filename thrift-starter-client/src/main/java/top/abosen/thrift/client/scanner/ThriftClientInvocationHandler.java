@@ -105,12 +105,14 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
 
                     } else if (realException == null && innerException.getType() == TTransportException.END_OF_FILE) {
                         // 服务端直接抛出了异常 or 服务端在被调用的过程中被关闭了
+                        // 重试
                         transportPool.clear(key); // 把以前的对象池进行销毁
                         if (transport != null) {
                             transport.close();
                         }
 
                     } else if (realException instanceof SocketException) {
+                        // 重试
                         transportPool.clear(key);
                         if (transport != null) {
                             transport.close();
@@ -123,6 +125,8 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                     if (transport != null) {
                         transport.close();
                     }
+                    // 服务端的业务异常，不重试
+                    throw new ThriftClientException("服务端调用失败: " + targetException.getMessage());
 
                 } else if (targetException instanceof TException) { // 自定义异常
                     throw targetException;
