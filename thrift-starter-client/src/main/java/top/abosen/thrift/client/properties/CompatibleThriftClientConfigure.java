@@ -6,6 +6,7 @@ import org.apache.thrift.protocol.TMultiplexedProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import top.abosen.thrift.client.pool.PortSelector;
 import top.abosen.thrift.client.pool.ThriftServerNode;
 import top.abosen.thrift.client.pool.ThriftTransportFactory;
 import top.abosen.thrift.common.Constants;
@@ -46,9 +47,9 @@ public class CompatibleThriftClientConfigure implements ThriftClientConfigure {
                 .orElse(null);
     }
 
-    @Override public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout) {
+    @Override public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
         /*服务端模式为 `thread_pool`*/
-        return ThriftTransportFactory.determineTTranport(ServiceMode.THREAD_POOL, serverNode, connectTimeout);
+        return ThriftTransportFactory.determineTTranport(ServiceMode.THREAD_POOL, serverNode, connectTimeout, portSelector);
     }
 
     @Override public TProtocol determineTProtocol(TTransport transport, String signature) {

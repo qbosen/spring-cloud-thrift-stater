@@ -2,6 +2,7 @@ package top.abosen.thrift.client.properties;
 
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
+import top.abosen.thrift.client.pool.PortSelector;
 import top.abosen.thrift.client.pool.ThriftServerNode;
 import top.abosen.thrift.common.ServiceMode;
 import top.abosen.thrift.common.ServiceSignature;
@@ -41,9 +42,10 @@ public interface ThriftClientConfigure {
      * @param serviceMode    服务模式
      * @param serverNode     服务节点
      * @param connectTimeout 连接超时时间 秒
+     * @param portSelector   端口范围配置
      * @return 配置好的 TTransport
      */
-    TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout);
+    TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector);
 
     /**
      * 配置协议

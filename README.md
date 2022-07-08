@@ -196,6 +196,11 @@ spring:
         query-passing: true
     thrift:
       client:
+        # 客户端端口配置
+        port-selector:
+            enabled: true #默认false
+            min-port: 1024
+            max-port: 65535
         # 客户端调用池配置，可选
         pool:                           
           # 负载调用重试此时

@@ -47,7 +47,7 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
                 .filter(it -> it > 0).orElse(30);
 
         TTransport transport = clientConfigureWrapper.getConfigure(key.getConfigure())
-                .determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout);
+                .determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout, properties.getPortSelector());
 
         try {
             transport.open();
