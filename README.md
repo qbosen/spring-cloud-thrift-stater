@@ -20,7 +20,7 @@
 2. 支持`Apache Thrift`的`Transport`层的连接池管理，减少了客户端与服务端之间连接的频繁创建和销毁。
 3. 支持与`Spring Cloud Consul`集成，客户端通过心跳检测与服务注册中心`Consul`保持连接，动态定时的刷新服务列表、监测服务的启用、关闭和健康状态。
 4. 支持与`Spring Cloud LoadBalancer`集成，支持客户端负载均衡，使用轮询的负载均衡策略，客户端的`Thrift`程序通过本地的服务缓存列表实现调用的动态转发。
-
+5. 支持配置`Thrift socket`端口占用范围，避免占用其他业务端口。
 
 ## 使用
 
@@ -38,7 +38,7 @@
 
 	* **default**:  `DefaultThriftServerConfigure` <==> `DefaultThriftClientConfigure`
 	* **compatible**: `CompatibleThriftServerConfigure` <==>  `CompatibleThriftClientConfigure`
-
+    * **api2thrift**: `ApiThriftServerConfigure` <==>  `ApiThriftServerConfigure`
 ### 服务端
 
 #### 1. 依赖

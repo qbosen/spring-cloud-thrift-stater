@@ -45,6 +45,10 @@ public class ThriftClientAutoConfiguration {
         return new CompatibleThriftClientConfigure(loadBalancerClient);
     }
 
+    @Bean
+    public ThriftClientConfigure apiClientConfigure(LoadBalancerClient loadBalancerClient) {
+        return new ApiThriftClientConfigure(loadBalancerClient);
+    }
     @Bean ThriftClientConfigureWrapper thriftClientConfigure(List<ThriftClientConfigure> configureList, ThriftClientProperties clientProperties) {
         if (CollectionUtils.isEmpty(configureList)) {
             throw new ThriftClientException("没有相关的 ThriftClientConfigure 配置");
