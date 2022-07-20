@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 @Slf4j
 public class ThriftTransportFactory {
 
-    private static final int CONNECT_TIMEOUT = 3000;
+    private static final int DEFAULT_CONNECT_TIMEOUT = 3000;
 
     public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
         TTransport transport;
@@ -43,18 +43,18 @@ public class ThriftTransportFactory {
     }
 
     public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, PortSelector portSelector) {
-        return determineTTranport(serviceMode, serverNode, CONNECT_TIMEOUT, portSelector);
+        return determineTTranport(serviceMode, serverNode, DEFAULT_CONNECT_TIMEOUT, portSelector);
     }
 
     private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
-        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT);
+        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
         tryBindCustomPort(portSelector, tSocket);
         log.debug("Established a new socket transport, service mode is {}", serviceMode);
         return tSocket;
     }
 
     private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
-        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : CONNECT_TIMEOUT);
+        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
         tryBindCustomPort(portSelector, tSocket);
         TTransport transport = new TFastFramedTransport(tSocket);
         log.debug("Established a new framed transport, service mode is {}", serviceMode);

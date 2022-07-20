@@ -21,6 +21,7 @@
 3. 支持与`Spring Cloud Consul`集成，客户端通过心跳检测与服务注册中心`Consul`保持连接，动态定时的刷新服务列表、监测服务的启用、关闭和健康状态。
 4. 支持与`Spring Cloud LoadBalancer`集成，支持客户端负载均衡，使用轮询的负载均衡策略，客户端的`Thrift`程序通过本地的服务缓存列表实现调用的动态转发。
 5. 支持配置`Thrift socket`端口占用范围，避免占用其他业务端口。
+6. 支持静态构造`Client`, 直接对服务端进行测试;
 
 ## 使用
 
@@ -241,6 +242,19 @@ spring:
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+##### 3.1 直接对服务端进行调用测试
+
+`ThriftClientTestUtil` 提供了直接构造客户端的工具, 可以很方便地对服务端thrift代码进行测试
+
+```java
+public class Test {
+    public static void main(String[] args) throws Exception {
+        CmsService.Iface client = ThriftClientTestUtil.getClient(CmsService.class, "cms-api-thrift", "192.168.7.130", 8303);
+        System.out.println(client.getColumns(SystemConstant.APP_SIGN));
     }
 }
 ```

@@ -41,7 +41,7 @@ public interface ThriftClientConfigure {
      *
      * @param serviceMode    服务模式
      * @param serverNode     服务节点
-     * @param connectTimeout 连接超时时间 秒
+     * @param connectTimeout 连接超时时间 毫秒
      * @param portSelector   端口范围配置
      * @return 配置好的 TTransport
      */
