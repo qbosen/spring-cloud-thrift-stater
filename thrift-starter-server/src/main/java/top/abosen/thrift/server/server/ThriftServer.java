@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.thrift.server.TServer;
+import top.abosen.thrift.server.exception.ThriftServerExceptionConverter;
 import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
@@ -33,8 +34,10 @@ public class ThriftServer {
             ThriftServerProperties.Service properties,
             ThriftServerConfigure serverConfigure,
             ThriftServerConsulDiscoveryFactory discoveryFactory,
-            List<ThriftServiceWrapper> serviceWrappers) {
-        TServer server = ThriftServerModeManager.createServerWithMode(properties, serverConfigure, serviceWrappers);
+            List<ThriftServiceWrapper> serviceWrappers,
+            ThriftServerExceptionConverter exceptionConverter
+            ) {
+        TServer server = ThriftServerModeManager.createServerWithMode(properties, serverConfigure, serviceWrappers,exceptionConverter);
         return new ThriftServer(server, properties, serviceWrappers, discoveryFactory.createConsulDiscovery(properties));
     }
 

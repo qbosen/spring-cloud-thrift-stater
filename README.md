@@ -13,6 +13,7 @@
 3. 支持与`Spring Cloud Consul`集成，支持服务注册，健康检查
 4. 支持自定义 `ThriftServerConfigure`，自定义服务签名、深度配置底层协议
 5. 支持对相同业务启动多个 `thrift` 服务，每个服务支持自定义 `ThriftServerConfigure`，一个业务服务多个不同版本的客户端。
+6. 支持定义全局异常转换, 将业务异常转换为 `thrift IDL` 中定义的异常 
 
 **客户端：**
 
@@ -156,6 +157,23 @@ public class CalculatorThriftController implements CalculatorService.Iface {
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+##### 3.1 服务端全局异常转换
+
+```java
+class MyConfiguration{
+    @Bean
+    public ThriftServerExceptionConverter exceptionConverter() {
+        return (Throwable t) -> {
+            if (t instanceof NotificationException) {
+                NotificationException tt = (NotificationException) t;
+                return new ServiceException(tt.getErrorCode(), tt.getMessage());
+            }
+            return t;
+        };
     }
 }
 ```

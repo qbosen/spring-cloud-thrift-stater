@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
 import top.abosen.thrift.common.ServiceSignature;
 import top.abosen.thrift.server.exception.ThriftServerException;
+import top.abosen.thrift.server.exception.ThriftServerExceptionConverter;
 import top.abosen.thrift.server.properties.ThriftServerConfigure;
 import top.abosen.thrift.server.properties.ThriftServerProperties;
 import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
@@ -35,7 +36,8 @@ import java.util.stream.Stream;
 public class ThriftServerModeManager {
     @SneakyThrows
     public static TServer createServerWithMode(
-            ThriftServerProperties.Service properties, ThriftServerConfigure serviceConfigure, List<ThriftServiceWrapper> serviceWrappers) {
+            ThriftServerProperties.Service properties, ThriftServerConfigure serviceConfigure,
+            List<ThriftServiceWrapper> serviceWrappers, ThriftServerExceptionConverter exceptionConverter) {
         TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
         for (ThriftServiceWrapper serviceWrapper : serviceWrappers) {
             Object target = serviceWrapper.getTarget();
@@ -68,8 +70,9 @@ public class ThriftServerModeManager {
                     throw new ThriftServerException("服务端调用失败", e);
                 } catch (InvocationTargetException invocationTargetException) {
                     Throwable e = invocationTargetException.getTargetException();
+                    // 业务上对异常进行统一处理
+                    e = exceptionConverter.convert(e);
                     if (TException.class.isAssignableFrom(e.getClass())) {
-                        // 业务异常
                         throw e;
                     }
                     // 会被 ProcessFunction 捕获并转换为 TApplicationException 再被客户端处理

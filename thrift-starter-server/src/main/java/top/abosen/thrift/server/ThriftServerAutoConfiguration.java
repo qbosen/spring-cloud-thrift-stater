@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.server.annotation.ThriftService;
+import top.abosen.thrift.server.exception.ThriftServerExceptionConverter;
 import top.abosen.thrift.server.exception.ThriftServerException;
 import top.abosen.thrift.server.properties.*;
 import top.abosen.thrift.server.server.ThriftServer;
@@ -51,6 +52,11 @@ public class ThriftServerAutoConfiguration {
         return new CompatibleThriftServerConfigure();
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    public ThriftServerExceptionConverter exceptionConverter() {
+        return ex->ex;
+    }
 
     @Bean ThriftServerConfigureWrapper thriftServerConfigure(List<ThriftServerConfigure> configureList, ThriftServerProperties serverProperties) {
         if (CollectionUtils.isEmpty(configureList)) {
@@ -78,6 +84,7 @@ public class ThriftServerAutoConfiguration {
             ThriftServerProperties properties,
             ThriftServerConsulDiscoveryFactory discoveryFactory,
             ThriftServerConfigureWrapper serverConfigureWrapper,
+            ThriftServerExceptionConverter exceptionConverter,
             ApplicationContext applicationContext) {
         if (CollectionUtils.isEmpty(properties.getServices())) {
             throw new ThriftServerException("没有相关服务的服务配置, 检查: spring.cloud.thrift.server.services");
@@ -110,7 +117,8 @@ public class ThriftServerAutoConfiguration {
                 .map(serviceProperties -> ThriftServer.createServer(serviceProperties,
                         serverConfigureWrapper.getConfigure(serviceProperties.getConfigure()),
                         discoveryFactory,
-                        serviceWrappers))
+                        serviceWrappers,
+                        exceptionConverter))
                 .collect(Collectors.toList());
 
         return new ThriftServerGroup(thriftServers);
