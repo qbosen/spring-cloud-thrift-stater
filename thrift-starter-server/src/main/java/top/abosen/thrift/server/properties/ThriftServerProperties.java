@@ -38,6 +38,13 @@ public class ThriftServerProperties {
         String configure = Constants.DEFAULT_CONFIGURE;
 
         /**
+         * 数据包大小,超过长度拒绝
+         * <p>
+         * 可用于排除大部分非thrift IDL定义的数据包,避免OOM
+         */
+        long maxReadBufferBytes = 1024 * 1024L;
+
+        /**
          * 服务模型(单线程/多线程/阻塞/非阻塞) 默认hsHa
          * <p>
          * simple: 单线程阻塞模型

@@ -108,6 +108,7 @@ public class ThriftServerModeManager {
                         .transportFactory(new TFastFramedTransport.Factory())
                         .protocolFactory(new TCompactProtocol.Factory())
                         .processor(processor);
+                args.maxReadBufferBytes = properties.getMaxReadBufferBytes();
                 return new TNonblockingServer(args);
             }
             case THREAD_POOL: {
@@ -143,6 +144,7 @@ public class ThriftServerModeManager {
                                 TimeUnit.SECONDS,
                                 new LinkedBlockingDeque<>(properties.getQueueSize())))
                         .processor(processor);
+                args.maxReadBufferBytes = properties.getMaxReadBufferBytes();
                 return new THsHaServer(args);
             }
             case THREADED_SELECTOR: {
@@ -161,6 +163,7 @@ public class ThriftServerModeManager {
                                 TimeUnit.SECONDS,
                                 new LinkedBlockingDeque<>(properties.getQueueSize())))
                         .processor(processor);
+                args.maxReadBufferBytes = properties.getMaxReadBufferBytes();
                 return new TThreadedSelectorServer(args);
             }
             default:

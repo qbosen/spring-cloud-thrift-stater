@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6]
+
+### Fixed
+
+- 服务端增加 `maxReadBufferBytes` 配置, 避免协议错误的数据包解析过程OOM, 默认1M
+
 ## [1.0.5]
 
 ### Added

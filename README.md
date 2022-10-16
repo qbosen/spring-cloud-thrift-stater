@@ -85,6 +85,8 @@ spring:
             service-port: 8081
             # 任务队列大小，可选，默认1000
             queue-size: 1000
+            # 最大数据包大小, 可选, bytes,默认1M=1024*1024=1048576
+            max-read-buffer-bytes: 1048576
             # 服务配置，可选，默认default。 通过实现 `ThriftServerConfigure`接口进行自定义配置，内置default/compatible
             configure: default
             discovery:
