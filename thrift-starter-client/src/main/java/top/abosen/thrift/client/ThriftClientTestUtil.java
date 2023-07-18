@@ -1,10 +1,15 @@
 package top.abosen.thrift.client;
 
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.client.pool.ThriftServerNode;
+import top.abosen.thrift.client.properties.ApiThriftClientConfigure;
 import top.abosen.thrift.client.properties.DefaultThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientConfigure;
 import top.abosen.thrift.client.properties.ThriftClientProperties;
@@ -48,6 +53,15 @@ public class ThriftClientTestUtil {
         return getClient(serviceClass, serviceName, host, port);
     }
 
+    public static <I> I getClientByIface(Class<I> ifaceClass, String serviceName, IfaceArgs args) throws Exception {
+        Class<?> serviceClass = ifaceClass.getEnclosingClass();
+        if (serviceClass == null) {
+            throw new ThriftClientException(ifaceClass.getName() + "不是一个合法的Iface接口");
+        }
+        return (I) getClientObject(serviceClass, serviceName, args);
+    }
+
+
     public static <I, C extends TServiceClient> I getClientByClient(Class<C> clientClass, String serviceName, String host, int port) throws Exception {
         Class<?> serviceClass = clientClass.getEnclosingClass();
         if (serviceClass == null) {
@@ -57,6 +71,11 @@ public class ThriftClientTestUtil {
     }
 
     private static Object getClientObject(Class<?> serviceClass, String serviceName, String host, int port)
+            throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        return getClientObject(serviceClass, serviceName, IfaceArgs.builder().configure(host, port).build());
+    }
+
+    private static Object getClientObject(Class<?> serviceClass, String serviceName, IfaceArgs ifaceArgs)
             throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
         Class<? extends TServiceClient> clientClass = Arrays.stream(serviceClass.getClasses())
                 .filter(TServiceClient.class::isAssignableFrom)
@@ -68,11 +87,10 @@ public class ThriftClientTestUtil {
                 .orElseThrow(() -> new ThriftClientException("未找到相关的Iface定义"));
 
         Constructor<? extends TServiceClient> constructor = clientClass.getConstructor(TProtocol.class);
-        ThriftClientConfigure configure = getClientConfigureByServerNode(host, port);
+        ThriftClientConfigure configure = ifaceArgs.getConfigure();
         ServiceSignature serviceSignature = new ServiceSignature(serviceName, clientClass.getEnclosingClass(), Constants.DEFAULT_VERSION);
 
-        ThriftClientProperties.PortConfigure portSelector = new ThriftClientProperties.PortConfigure();
-        TTransport transport = configure.determineTTransport(ServiceMode.DEFAULT, configure.chooseServerNode(serviceSignature.getServiceName()), 30_000, portSelector);
+        TTransport transport = configure.determineTTransport(ifaceArgs.getMode(), configure.chooseServerNode(serviceSignature.getServiceName()), ifaceArgs.getConnectTimeout(), ifaceArgs.getPortConfigure());
         TProtocol tProtocol = configure.determineTProtocol(transport, configure.generateSignature(serviceSignature));
         final Object target = constructor.newInstance(tProtocol);
 
@@ -86,12 +104,63 @@ public class ThriftClientTestUtil {
         });
     }
 
-    private static ThriftClientConfigure getClientConfigureByServerNode(String host, int port) {
-        return new DefaultThriftClientConfigure(null) {
-            @Override
-            public ThriftServerNode chooseServerNode(String serviceName) {
-                return new ThriftServerNode(host, port);
+    @Builder(access = AccessLevel.NONE)
+    @Getter
+    public static class IfaceArgs {
+        /**
+         * socket超时时间, 默认30s
+         */
+        @Builder.Default
+        private int connectTimeout = 30_000;
+        /**
+         * 使用的端口范围, 默认随机
+         */
+        @Builder.Default
+        private ThriftClientProperties.PortConfigure portConfigure = new ThriftClientProperties.PortConfigure();
+        /**
+         * 连接模式
+         */
+        @Builder.Default
+        private ServiceMode mode = ServiceMode.DEFAULT;
+
+        private ThriftClientConfigure configure;
+
+
+        public static class IfaceArgsBuilder {
+            /**
+             * 直接通过 ip+端口访问服务, 此时服务名为 xx-thrift 服务; 与 default configure 对应
+             *
+             * @param host host
+             * @param port port
+             * @return builder
+             */
+            public IfaceArgsBuilder configure(String host, int port) {
+                this.configure = new DefaultThriftClientConfigure(null) {
+                    @Override
+                    public ThriftServerNode chooseServerNode(String serviceName) {
+                        return new ThriftServerNode(host, port);
+                    }
+                };
+                ;
+                return this;
             }
-        };
+
+            /**
+             * 通过consul访问服务, 此时服务名为xxx-api,使用端口+2; 与 api2thrift configure 对应
+             *
+             * @param client loadBalancerClient
+             * @return builder
+             */
+            public IfaceArgsBuilder configure(LoadBalancerClient client) {
+                this.configure = new ApiThriftClientConfigure(client);
+                return this;
+            }
+
+            public IfaceArgsBuilder configure(ThriftClientConfigure configure) {
+                this.configure = configure;
+                return this;
+            }
+
+        }
     }
 }
