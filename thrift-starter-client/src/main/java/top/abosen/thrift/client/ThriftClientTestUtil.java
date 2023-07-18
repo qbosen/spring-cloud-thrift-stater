@@ -104,7 +104,7 @@ public class ThriftClientTestUtil {
         });
     }
 
-    @Builder(access = AccessLevel.NONE)
+    @Builder
     @Getter
     public static class IfaceArgs {
         /**
