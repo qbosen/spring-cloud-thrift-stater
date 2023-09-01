@@ -51,7 +51,8 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
         this.serviceConfig = serviceConfig;
     }
 
-    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 延迟设置
         if (isNull(clientConfigureWrapper) || isNull(poolConfig) || isNull(transportPool)) {
             ThriftClientContext context = ThriftClientContext.context();
@@ -69,7 +70,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
         ThriftClientKey key = null;
         while (true) {
             if (++retryTimes > poolConfig.getRetryTimes()) {
-                log.error("[ThriftClient] 所有客户重试端调用均失败, method:{}, signature:{}, retryTimes:{}", method.getName(), signature, retryTimes);
+                log.error("[ThriftClient] 所有客户重试端调用均失败, method:{}, signature:{}, retryTimes:{}", method.getName(), signature, retryTimes - 1);
                 throw new ThriftClientException("客户端调用失败: " + signature);
             }
             try {
@@ -82,13 +83,14 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                     log.debug("[LoadBalancer] 获取负载服务节点: [host:{}, port:{}]", node.getHost(), node.getPort());
                 }
 
-                key = new ThriftClientKey(signature, serviceName,serviceConfig.getConfigure(), node.getHost(), node.getPort());
+                key = new ThriftClientKey(signature, serviceName, serviceConfig.getConfigure(), node.getHost(), node.getPort());
                 transport = transportPool.borrowObject(key);
                 TProtocol protocol = clientConfigure.determineTProtocol(transport, signature);
                 Object client = clientConstructor.newInstance(protocol);
                 return method.invoke(client, args);
 
-            } catch (IllegalArgumentException | IllegalAccessException | InstantiationException | SecurityException | NoSuchMethodException e) {
+            } catch (IllegalArgumentException | IllegalAccessException | InstantiationException | SecurityException |
+                     NoSuchMethodException e) {
                 throw new ThriftClientException("无法创建thrift客户端链接", e);
             } catch (InvocationTargetException e) {
                 Throwable targetException = e.getTargetException();
@@ -96,7 +98,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                     TTransportException innerException = (TTransportException) targetException;
                     Throwable realException = innerException.getCause();
                     if (realException instanceof SocketTimeoutException) {
-                        if (transport != null) {
+                        if (transport != null && transport.isOpen()) {
                             transport.close();
                         }
                         log.error("[ThriftClient] 请求超时, server: [host:{},port:{}]", node.getHost(), node.getPort());
@@ -104,27 +106,24 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                         throw new ThriftClientException("Thrift client request timeout", e);
 
                     } else if (realException == null && innerException.getType() == TTransportException.END_OF_FILE) {
-                        // 服务端直接抛出了异常 or 服务端在被调用的过程中被关闭了
                         // 重试
-                        transportPool.clear(key); // 把以前的对象池进行销毁
-                        if (transport != null) {
-                            transport.close();
-                        }
-
+                        // 服务端直接抛出了异常 or 服务端在被调用的过程中被关闭了
+                        log.error("[ThriftClient] Transport异常: [connect:{}]", key, innerException);
+                        clearTransport(transport, key);
                     } else if (realException instanceof SocketException) {
                         // 重试
-                        transportPool.clear(key);
-                        if (transport != null) {
-                            transport.close();
-                        }
+                        log.error("[ThriftClient] Socket异常: [connect:{}]", key, realException);
+                        clearTransport(transport, key);
+                    } else {
+                        // 重试
+                        Throwable t = realException == null ? innerException : realException;
+                        log.error("[ThriftClient] 未知异常: [connect:{}]", key, t);
+                        clearTransport(transport, key);
                     }
 
                 } else if (targetException instanceof TApplicationException) {  // 有可能服务端返回的结果里存在null
                     log.error("ThriftServer异常: [signature:{}]", signature);
-                    transportPool.clear(key);
-                    if (transport != null) {
-                        transport.close();
-                    }
+                    clearTransport(transport, key);
                     // 服务端的业务异常，不重试
                     throw new ThriftClientException("服务端调用失败: " + targetException.getMessage());
 
@@ -140,13 +139,20 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                 throw e;
             } finally {
                 try {
-                    if (transportPool != null && transport != null) {
+                    if (transportPool != null && transport != null && transport.isOpen()) {
                         transportPool.returnObject(key, transport);
                     }
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
                 }
             }
+        }
+    }
+
+    private void clearTransport(TTransport transport, ThriftClientKey key) {
+        transportPool.clear(key);
+        if (transport != null && transport.isOpen()) {
+            transport.close();
         }
     }
 }

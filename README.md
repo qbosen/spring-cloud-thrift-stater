@@ -298,3 +298,20 @@ public class Test {
 }
 ```
 
+#### 4.2 客户端bean在初始化过程中进行thrift调用
+
+```java
+@Configuration
+@RequiredArgsConstructor
+// 依赖于 ThriftClientContext, 保证在其初始化完成后再进行调用
+@DependsOn(ThriftClientContext.BEAN_NAME)
+public class TenantDatasourceConfigHandler implements InitializingBean {
+    private final TenantService.Iface tenantService;
+    
+    @Override
+    public void afterPropertiesSet() {
+        this.tenantService.rpcInvoke();
+    }
+}
+```
+

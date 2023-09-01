@@ -20,6 +20,8 @@ import top.abosen.thrift.client.pool.TransportKeyedPooledObjectFactory;
 import top.abosen.thrift.client.properties.*;
 import top.abosen.thrift.client.scanner.ThriftClientBeanScanProcessor;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,7 +51,9 @@ public class ThriftClientAutoConfiguration {
     public ThriftClientConfigure apiClientConfigure(LoadBalancerClient loadBalancerClient) {
         return new ApiThriftClientConfigure(loadBalancerClient);
     }
-    @Bean ThriftClientConfigureWrapper thriftClientConfigure(List<ThriftClientConfigure> configureList, ThriftClientProperties clientProperties) {
+
+    @Bean
+    ThriftClientConfigureWrapper thriftClientConfigure(List<ThriftClientConfigure> configureList, ThriftClientProperties clientProperties) {
         if (CollectionUtils.isEmpty(configureList)) {
             throw new ThriftClientException("没有相关的 ThriftClientConfigure 配置");
         }
@@ -92,7 +96,7 @@ public class ThriftClientAutoConfiguration {
         GenericKeyedObjectPoolConfig<TTransport> config = new GenericKeyedObjectPoolConfig<>();
         config.setMinIdlePerKey(poolProperties.getPoolMinIdlePerKey());
         config.setMaxIdlePerKey(poolProperties.getPoolMaxIdlePerKey());
-        config.setMaxWaitMillis(poolProperties.getPoolMaxWait());
+        config.setMaxWait(Duration.of(poolProperties.getPoolMaxWait(), ChronoUnit.MILLIS));
         config.setMaxTotalPerKey(poolProperties.getPoolMaxTotalPerKey());
         config.setTestOnCreate(poolProperties.isTestOnCreate());
         config.setTestOnBorrow(poolProperties.isTestOnBorrow());
@@ -103,7 +107,7 @@ public class ThriftClientAutoConfiguration {
         return config;
     }
 
-    @Bean
+    @Bean(name = {ThriftClientContext.BEAN_NAME, ThriftClientContext.BEAN_FULL_NAME})
     @ConditionalOnMissingBean
     public ThriftClientContext thriftClientContext(
             ThriftClientProperties properties,

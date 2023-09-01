@@ -19,6 +19,9 @@ import top.abosen.thrift.client.properties.ThriftClientProperties;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ThriftClientContext {
+    public static final String BEAN_NAME = "thriftClientContext";
+    public static final String BEAN_FULL_NAME = "top.abosen.thrift.client.ThriftClientContext";
+
     static final ThriftClientContext CONTEXT = new ThriftClientContext();
     volatile boolean init;
 
