@@ -40,7 +40,8 @@ public class ThriftServerModeManager {
             List<ThriftServiceWrapper> serviceWrappers, ThriftServerExceptionConverter exceptionConverter) {
         TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
         for (ThriftServiceWrapper serviceWrapper : serviceWrappers) {
-            Object target = serviceWrapper.getTarget();
+//            Object target = serviceWrapper.getTarget();
+            Object target = serviceWrapper.getBean();
             Class<?> ifaceClass = serviceWrapper.getIfaceType();
 
             if (Objects.isNull(ifaceClass)) {
