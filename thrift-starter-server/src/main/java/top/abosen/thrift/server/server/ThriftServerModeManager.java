@@ -6,10 +6,10 @@ import org.apache.thrift.TMultiplexedProcessor;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.server.*;
-import org.apache.thrift.transport.TFastFramedTransport;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
+import org.apache.thrift.transport.layered.TFastFramedTransport;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.ClassUtils;
 import top.abosen.thrift.common.ServiceSignature;
@@ -120,7 +120,6 @@ public class ThriftServerModeManager {
                         .protocolFactory(new TCompactProtocol.Factory())
                         .minWorkerThreads(poolConfig.getMinWorkerThreads())
                         .maxWorkerThreads(poolConfig.getMaxWorkerThreads())
-                        .requestTimeout(poolConfig.getRequestTimeout())
                         .executorService(new ThreadPoolExecutor(
                                 poolConfig.getMinWorkerThreads(),
                                 poolConfig.getMaxWorkerThreads(),

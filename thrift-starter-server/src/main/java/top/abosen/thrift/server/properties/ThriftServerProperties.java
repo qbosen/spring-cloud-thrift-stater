@@ -78,7 +78,7 @@ public class ThriftServerProperties {
     public static class ThreadPool {
         int minWorkerThreads = 5;
         int maxWorkerThreads = 20;
-        int requestTimeout = 5;
+        int requestTimeout = 60;
         int keepAliveTime = 60;
     }
 

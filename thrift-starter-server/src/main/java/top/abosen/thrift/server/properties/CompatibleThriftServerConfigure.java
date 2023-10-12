@@ -42,7 +42,6 @@ public class CompatibleThriftServerConfigure implements ThriftServerConfigure {
                 .protocolFactory(new TBinaryProtocol.Factory(true, true))
                 .minWorkerThreads(poolConfig.getMinWorkerThreads())
                 .maxWorkerThreads(poolConfig.getMaxWorkerThreads())
-                .requestTimeout(poolConfig.getRequestTimeout())
                 .executorService(new ThreadPoolExecutor(
                         poolConfig.getMinWorkerThreads(),
                         poolConfig.getMaxWorkerThreads(),

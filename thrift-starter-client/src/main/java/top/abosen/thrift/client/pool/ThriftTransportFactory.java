@@ -1,9 +1,10 @@
 package top.abosen.thrift.client.pool;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.transport.TFastFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.layered.TFastFramedTransport;
 import top.abosen.thrift.client.exception.ThriftClientException;
 import top.abosen.thrift.common.ServiceMode;
 import top.abosen.thrift.common.SocketUtils;
@@ -46,6 +47,7 @@ public class ThriftTransportFactory {
         return determineTTranport(serviceMode, serverNode, DEFAULT_CONNECT_TIMEOUT, portSelector);
     }
 
+    @SneakyThrows
     private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
         TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
         tryBindCustomPort(portSelector, tSocket);
@@ -53,6 +55,7 @@ public class ThriftTransportFactory {
         return tSocket;
     }
 
+    @SneakyThrows
     private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
         TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
         tryBindCustomPort(portSelector, tSocket);
