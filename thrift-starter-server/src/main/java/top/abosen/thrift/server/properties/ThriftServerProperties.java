@@ -83,19 +83,37 @@ public class ThriftServerProperties {
     }
 
     @Data
-    public static class HsHa {
+    public static class HsHa implements ThreadPoolExecutorConfigure {
         int minWorkerThreads = 5;
         int maxWorkerThreads = 20;
         int keepAliveTime = 60;
+        int queueSize = -1;
     }
 
     @Data
-    public static class ThreadedSelector {
-        int acceptQueueSizePerThread = 4;
-        int selectorThreads = 2;
+    public static class ThreadedSelector implements ThreadPoolExecutorConfigure {
         int minWorkerThreads = 5;
         int maxWorkerThreads = 20;
         int keepAliveTime = 300;
+        int queueSize = -1;
+        int selectorThreads = 2;
+        int acceptQueueSizePerThread = 4;
+        int backlog = 1024;
+    }
+
+    public interface ThreadPoolExecutorConfigure {
+        int getMinWorkerThreads();
+
+        int getMaxWorkerThreads();
+
+        int getKeepAliveTime();
+
+        /**
+         * 小于等于0 表示使用外部 queueSize 配置; 默认使用外部配置
+         *
+         * @return 队列容量
+         */
+        int getQueueSize();
     }
 
 }
