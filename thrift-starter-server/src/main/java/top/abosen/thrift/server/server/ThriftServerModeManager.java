@@ -25,8 +25,10 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 /**
@@ -137,37 +139,66 @@ public class ThriftServerModeManager {
                         .protocolFactory(new TCompactProtocol.Factory())
                         .minWorkerThreads(hsHaConfig.getMinWorkerThreads())
                         .maxWorkerThreads(hsHaConfig.getMaxWorkerThreads())
-                        .executorService(new ThreadPoolExecutor(
-                                hsHaConfig.getMinWorkerThreads(),
-                                hsHaConfig.getMaxWorkerThreads(),
-                                hsHaConfig.getKeepAliveTime(),
-                                TimeUnit.SECONDS,
-                                new LinkedBlockingDeque<>(properties.getQueueSize())))
+                        .executorService(buildThreadPoolExecutor(hsHaConfig, properties.getQueueSize(), properties.getServiceName()))
                         .processor(processor);
                 args.maxReadBufferBytes = properties.getMaxReadBufferBytes();
                 return new THsHaServer(args);
             }
             case THREADED_SELECTOR: {
                 ThriftServerProperties.ThreadedSelector selectorConfig = properties.getThreadedSelector();
-                TNonblockingServerSocket serverSocket = new TNonblockingServerSocket(properties.getServicePort());
+                TNonblockingServerSocket serverSocket = new TNonblockingServerSocket(
+                        new TNonblockingServerSocket.NonblockingAbstractServerSocketArgs()
+                                .port(properties.getServicePort())
+                                .backlog(selectorConfig.getBacklog())
+                );
+
                 TThreadedSelectorServer.Args args = new TThreadedSelectorServer.Args(serverSocket)
                         .transportFactory(new TFastFramedTransport.Factory())
                         .protocolFactory(new TCompactProtocol.Factory())
                         .selectorThreads(selectorConfig.getSelectorThreads())
                         .workerThreads(selectorConfig.getMinWorkerThreads())
                         .acceptQueueSizePerThread(selectorConfig.getAcceptQueueSizePerThread())
-                        .executorService(new ThreadPoolExecutor(
-                                selectorConfig.getMinWorkerThreads(),
-                                selectorConfig.getMaxWorkerThreads(),
-                                selectorConfig.getKeepAliveTime(),
-                                TimeUnit.SECONDS,
-                                new LinkedBlockingDeque<>(properties.getQueueSize())))
+                        .executorService(buildThreadPoolExecutor(selectorConfig, properties.getQueueSize(), properties.getServiceName()))
                         .processor(processor);
                 args.maxReadBufferBytes = properties.getMaxReadBufferBytes();
                 return new TThreadedSelectorServer(args);
             }
             default:
                 throw new IllegalStateException("Unexpected value: " + properties.getServiceMode());
+        }
+    }
+
+    private static ThreadPoolExecutor buildThreadPoolExecutor(
+            ThriftServerProperties.ThreadPoolExecutorConfigure poolConfigure, int defaultQueueSize, String serviceName) {
+        return new ThreadPoolExecutor(
+                poolConfigure.getMinWorkerThreads(),
+                poolConfigure.getMaxWorkerThreads(),
+                poolConfigure.getKeepAliveTime(),
+                TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(poolConfigure.getQueueSize() > 0 ? poolConfigure.getQueueSize() : defaultQueueSize),
+                new ThriftThreadFactory(serviceName),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+    }
+
+    private static class ThriftThreadFactory implements ThreadFactory {
+        private static final ThreadGroup group = new ThreadGroup("thrift-group");
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        ThriftThreadFactory(String serviceName) {
+            namePrefix = "thrift-" + serviceName + "-thread-";
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r,
+                    namePrefix + threadNumber.getAndIncrement(),
+                    0);
+            if (t.isDaemon())
+                t.setDaemon(false);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
         }
     }
 }
