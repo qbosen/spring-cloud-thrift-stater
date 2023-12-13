@@ -22,12 +22,11 @@ task genThrift(group: 'build') {
             workingDir "$project.projectDir"
             def thriftCmd = '/opt/homebrew/opt/thrift@0.9/bin/thrift'
 
+            standardOutput = new ByteArrayOutputStream()
+            errorOutput = new ByteArrayOutputStream()
             commandLine thriftCmd, '--gen', 'java', '-out', thriftGenPath, '-r', "$projectDir/src/main/thrift/calculator.thrift"
             logger.quiet('Generate thrift files...')
-            standardOutput = new ByteArrayOutputStream()
-            ext.output = {
-                return standardOutput.toString()
-            }
+
         }
     }
 }

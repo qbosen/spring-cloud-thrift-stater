@@ -2,16 +2,8 @@ spring:
   application:
     name: calculator-thrift-pure-server
   cloud:
-    inetutils:
-      preferred-networks: 192.168.*
     consul:
-      host: "${CONSUL_HOST:localhost}"
-      port: "${CONSUL_PORT:8500}"
-      discovery:
-        enabled: true
-        register: false
-        register-health-check: false
-        query-passing: true
+      enabled: false
     thrift:
       server:
         services:
@@ -20,8 +12,8 @@ spring:
             service-port: 8081
             queue-size: 1000
             discovery:
-              register: true
-              health-check: true
+              register: false
+              health-check: false
               prefer-ip-address: true
               instance-id: ${spring.cloud.thrift.server.services[0].service-name}:${spring.cloud.client.ip-address}:${spring.cloud.thrift.server.services[0].service-port}
               tags:

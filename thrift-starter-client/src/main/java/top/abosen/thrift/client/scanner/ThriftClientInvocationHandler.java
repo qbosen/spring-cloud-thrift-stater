@@ -123,7 +123,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
 
                 } else if (targetException instanceof TApplicationException) {  // 有可能服务端返回的结果里存在null
                     log.error("ThriftServer异常: [signature:{}]", signature);
-                    clearTransport(transport, key);
+                    // clearTransport(transport, key); // 2023-12-13 可能是未正常处理的业务异常, 不代表链接有问题
                     // 服务端的业务异常，不重试
                     throw new ThriftClientException("服务端调用失败: " + targetException.getMessage());
 

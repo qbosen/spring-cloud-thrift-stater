@@ -18,8 +18,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import top.abosen.thrift.server.annotation.ThriftService;
-import top.abosen.thrift.server.exception.ThriftServerExceptionConverter;
 import top.abosen.thrift.server.exception.ThriftServerException;
+import top.abosen.thrift.server.exception.ThriftServerExceptionConverter;
 import top.abosen.thrift.server.properties.*;
 import top.abosen.thrift.server.server.ThriftServer;
 import top.abosen.thrift.server.server.ThriftServerConsulDiscoveryFactory;
@@ -29,6 +29,7 @@ import top.abosen.thrift.server.wrapper.ThriftServiceWrapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -55,10 +56,11 @@ public class ThriftServerAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ThriftServerExceptionConverter exceptionConverter() {
-        return ex->ex;
+        return ex -> ex;
     }
 
-    @Bean ThriftServerConfigureWrapper thriftServerConfigure(List<ThriftServerConfigure> configureList, ThriftServerProperties serverProperties) {
+    @Bean
+    ThriftServerConfigureWrapper thriftServerConfigure(List<ThriftServerConfigure> configureList, ThriftServerProperties serverProperties) {
         if (CollectionUtils.isEmpty(configureList)) {
             throw new ThriftServerException("没有相关的 ThriftServerConfigure 配置");
         }
@@ -82,7 +84,7 @@ public class ThriftServerAutoConfiguration {
     @ConditionalOnMissingBean
     public ThriftServerGroup thriftServerGroup(
             ThriftServerProperties properties,
-            ThriftServerConsulDiscoveryFactory discoveryFactory,
+            Optional<ThriftServerConsulDiscoveryFactory> discoveryFactory,
             ThriftServerConfigureWrapper serverConfigureWrapper,
             ThriftServerExceptionConverter exceptionConverter,
             ApplicationContext applicationContext) {
@@ -104,7 +106,7 @@ public class ThriftServerAutoConfiguration {
                     }
                     ThriftService thriftService = target.getClass().getAnnotation(ThriftService.class);
 
-                    return ThriftServiceWrapper.of(target,bean, thriftService.version());
+                    return ThriftServiceWrapper.of(target, bean, thriftService.version());
                 }).collect(Collectors.toList());
 
         if (serviceWrappers.isEmpty()) {
@@ -116,7 +118,7 @@ public class ThriftServerAutoConfiguration {
         List<ThriftServer> thriftServers = properties.getServices().stream()
                 .map(serviceProperties -> ThriftServer.createServer(serviceProperties,
                         serverConfigureWrapper.getConfigure(serviceProperties.getConfigure()),
-                        discoveryFactory,
+                        discoveryFactory.orElse(null),
                         serviceWrappers,
                         exceptionConverter))
                 .collect(Collectors.toList());
