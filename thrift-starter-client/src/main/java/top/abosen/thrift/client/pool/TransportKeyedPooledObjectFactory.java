@@ -89,7 +89,7 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
     public void destroyObject(ThriftClientKey key, PooledObject<TTransport> value) throws Exception {
         if (Objects.nonNull(value)) {
             TTransport transport = value.getObject();
-            if (Objects.nonNull(transport)) {
+            if (Objects.nonNull(transport) && transport.isOpen()) {
                 transport.close();
             }
             value.markAbandoned();

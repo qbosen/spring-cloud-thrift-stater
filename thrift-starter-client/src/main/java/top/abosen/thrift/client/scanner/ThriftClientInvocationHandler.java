@@ -65,10 +65,13 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
         String signature = clientConfigure.generateSignature(serviceSignature);
         String serviceName = serviceConfig.getServiceName();
         int retryTimes = 0;
-        TTransport transport = null;
-        ThriftServerNode node = null;
-        ThriftClientKey key = null;
+
         while (true) {
+            TTransport transport = null;
+            ThriftServerNode node = null;
+            ThriftClientKey key = null;
+            boolean destroyTransport = false;
+
             if (++retryTimes > poolConfig.getRetryTimes()) {
                 log.error("[ThriftClient] 所有客户重试端调用均失败, method:{}, signature:{}, retryTimes:{}", method.getName(), signature, retryTimes - 1);
                 throw new ThriftClientException("客户端调用失败: " + signature);
@@ -97,36 +100,31 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                 if (targetException instanceof TTransportException) {
                     TTransportException innerException = (TTransportException) targetException;
                     Throwable realException = innerException.getCause();
+                    // 网络相关异常, 销毁这个 transport
+                    destroyTransport = true;
+
                     if (realException instanceof SocketTimeoutException) {
-                        if (transport != null && transport.isOpen()) {
-                            transport.close();
-                        }
                         log.error("[ThriftClient] 请求超时, server: [host:{},port:{}]", node.getHost(), node.getPort());
                         // 超时 直接抛出，不进行重试
                         throw new ThriftClientException("Thrift client request timeout", e);
-
                     } else if (realException == null && innerException.getType() == TTransportException.END_OF_FILE) {
                         // 重试
                         // 服务端直接抛出了异常 or 服务端在被调用的过程中被关闭了
                         log.error("[ThriftClient] Transport异常: [connect:{}]", key, innerException);
-                        clearTransport(transport, key);
                     } else if (realException instanceof SocketException) {
                         // 重试
                         log.error("[ThriftClient] Socket异常: [connect:{}]", key, realException);
-                        clearTransport(transport, key);
                     } else {
                         // 重试
                         Throwable t = realException == null ? innerException : realException;
                         log.error("[ThriftClient] 未知异常: [connect:{}]", key, t);
-                        clearTransport(transport, key);
                     }
 
                 } else if (targetException instanceof TApplicationException) {  // 有可能服务端返回的结果里存在null
                     log.error("ThriftServer异常: [signature:{}]", signature);
-                    // clearTransport(transport, key); // 2023-12-13 可能是未正常处理的业务异常, 不代表链接有问题
+                    // transportPool.invalidateObject(key, transport); // 2023-12-13 可能是未正常处理的业务异常, 不代表transport有问题
                     // 服务端的业务异常，不重试
                     throw new ThriftClientException("服务端调用失败: " + targetException.getMessage());
-
                 } else if (targetException instanceof TException) { // 自定义异常
                     throw targetException;
                 } else {
@@ -139,9 +137,8 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                 throw e;
             } finally {
                 try {
-                    if (transportPool != null && transport != null && transport.isOpen()) {
-                        transportPool.returnObject(key, transport);
-                    }
+                    if (destroyTransport) transportPool.invalidateObject(key, transport);
+                    else transportPool.returnObject(key, transport);
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
                 }
@@ -149,10 +146,4 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
         }
     }
 
-    private void clearTransport(TTransport transport, ThriftClientKey key) {
-        transportPool.clear(key);
-        if (transport != null && transport.isOpen()) {
-            transport.close();
-        }
-    }
 }
