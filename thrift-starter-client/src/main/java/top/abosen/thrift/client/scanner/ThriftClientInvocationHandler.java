@@ -140,6 +140,7 @@ public class ThriftClientInvocationHandler implements InvocationHandler {
                     if (destroyTransport) transportPool.invalidateObject(key, transport);
                     else transportPool.returnObject(key, transport);
                 } catch (Exception e) {
+                    transportPool.clear(key);
                     log.error(e.getMessage(), e);
                 }
             }
