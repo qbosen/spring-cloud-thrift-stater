@@ -2,7 +2,6 @@ package top.abosen.thrift.demo.client.service;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -10,8 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @date 2021/6/25
  */
 
-@RequestMapping("/rest")
-@FeignClient(name = "calculator-rest-server")
+@FeignClient(name = "calculator-rest-server", path = "/rest")
 public interface CalculatorFeignClient {
     @GetMapping("/add")
     int add(@RequestParam("arg1") int arg1, @RequestParam("arg2") int arg2);
