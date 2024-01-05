@@ -14,7 +14,7 @@ dependencies {
 
     implementation("org.apache.thrift:libthrift:$thriftVersion")
     implementation("org.apache.commons:commons-lang3")
-    implementation("org.apache.commons:commons-pool2")
+    api("org.apache.commons:commons-pool2")
     implementation("org.apache.commons:commons-collections4:$commonCollectionVersion")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

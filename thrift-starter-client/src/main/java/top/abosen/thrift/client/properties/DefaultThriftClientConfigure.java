@@ -24,11 +24,13 @@ import java.util.Optional;
 public class DefaultThriftClientConfigure implements ThriftClientConfigure {
     protected final LoadBalancerClient loadBalancerClient;
 
-    @Override public String configureName() {
+    @Override
+    public String configureName() {
         return Constants.DEFAULT_CONFIGURE;
     }
 
-    @Override public String generateSignature(ServiceSignature signature) {
+    @Override
+    public String generateSignature(ServiceSignature signature) {
         return String.join("$",
                 new String[]{signature.getServiceName(), signature.getServiceClass().getName(), String.valueOf(signature.getVersion())});
     }
@@ -36,17 +38,20 @@ public class DefaultThriftClientConfigure implements ThriftClientConfigure {
     /**
      * 默认从服务发现获取
      */
-    @Override public ThriftServerNode chooseServerNode(String serviceName) {
+    @Override
+    public ThriftServerNode chooseServerNode(String serviceName) {
         return Optional.ofNullable(loadBalancerClient.choose(serviceName))
                 .map(it -> new ThriftServerNode(it.getHost(), it.getPort()))
                 .orElse(null);
     }
 
-    @Override public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
-        return ThriftTransportFactory.determineTTranport(serviceMode, serverNode, connectTimeout, portSelector);
+    @Override
+    public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector) {
+        return ThriftTransportFactory.determineTTranport(serviceMode, serverNode, socketTimeout, connectTimeout, portSelector);
     }
 
-    @Override public TProtocol determineTProtocol(TTransport transport, String signature) {
+    @Override
+    public TProtocol determineTProtocol(TTransport transport, String signature) {
         return new TMultiplexedProtocol(new TCompactProtocol(transport), signature);
     }
 

@@ -241,6 +241,7 @@ spring:
           # 负载调用重试此时
           retry-times: 3
           # socket 超时配置
+          socket-timeout: 30000
           connect-timeout: 10000
           # 池化配置
           pool-max-total-per-key: 60

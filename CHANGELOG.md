@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.13]
+
+### Changed
+
+- 客户端增加 `pool.socket-timeout` 配置
+
+## [1.0.12]
+
+### Fixed
+
+- 修复socket timeout 时, commons pool 对象泄露问题
+
 ## [1.0.11]
 
 ### Changed

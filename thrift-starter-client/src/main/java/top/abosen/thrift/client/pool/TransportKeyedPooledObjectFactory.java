@@ -46,8 +46,12 @@ public class TransportKeyedPooledObjectFactory extends BaseKeyedPooledObjectFact
                 .map(ThriftClientProperties.Pool::getConnectTimeout)
                 .filter(it -> it > 0).orElse(30);
 
+        int socketTimeout = Optional.ofNullable(properties.getPool())
+                .map(ThriftClientProperties.Pool::getSocketTimeout)
+                .filter(it -> it > 0).orElse(30);
+
         TTransport transport = clientConfigureWrapper.getConfigure(key.getConfigure())
-                .determineTTransport(serviceConfig.getServiceMode(), node, connectTimeout, properties.getPortSelector());
+                .determineTTransport(serviceConfig.getServiceMode(), node, socketTimeout, connectTimeout, properties.getPortSelector());
 
         try {
             transport.open();

@@ -26,11 +26,13 @@ import java.util.Optional;
 public class CompatibleThriftClientConfigure implements ThriftClientConfigure {
     protected final LoadBalancerClient loadBalancerClient;
 
-    @Override public String configureName() {
+    @Override
+    public String configureName() {
         return Constants.COMPATIBLE_CONFIGURE;
     }
 
-    @Override public String generateSignature(ServiceSignature signature) {
+    @Override
+    public String generateSignature(ServiceSignature signature) {
         /*签名方式使用 `serviceClass.getSimpleName()` 存在重复的风险*/
         return signature.getServiceClass().getSimpleName();
     }
@@ -38,7 +40,8 @@ public class CompatibleThriftClientConfigure implements ThriftClientConfigure {
     /**
      * 默认从服务发现获取
      */
-    @Override public ThriftServerNode chooseServerNode(String serviceName) {
+    @Override
+    public ThriftServerNode chooseServerNode(String serviceName) {
         /*服务是如果以 `api` 结尾的服务，则端口`+1`*/
         return Optional.ofNullable(loadBalancerClient.choose(serviceName))
                 .map(it -> serviceName.endsWith("api") ?
@@ -47,12 +50,14 @@ public class CompatibleThriftClientConfigure implements ThriftClientConfigure {
                 .orElse(null);
     }
 
-    @Override public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
+    @Override
+    public TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector) {
         /*服务端模式为 `thread_pool`*/
-        return ThriftTransportFactory.determineTTranport(ServiceMode.THREAD_POOL, serverNode, connectTimeout, portSelector);
+        return ThriftTransportFactory.determineTTranport(ServiceMode.THREAD_POOL, serverNode, socketTimeout, connectTimeout, portSelector);
     }
 
-    @Override public TProtocol determineTProtocol(TTransport transport, String signature) {
+    @Override
+    public TProtocol determineTProtocol(TTransport transport, String signature) {
         /*传输协议使用 `TBinaryProtocal` 性能更低*/
         return new TMultiplexedProtocol(new TBinaryProtocol(transport), signature);
     }

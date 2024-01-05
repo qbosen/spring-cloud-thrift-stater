@@ -40,6 +40,7 @@ public class ThriftClientProperties {
     public static class Pool {
         int retryTimes = 3;
         int connectTimeout = 10000;
+        int socketTimeout = 60000;
         int poolMaxTotalPerKey = 60;
         int poolMaxIdlePerKey = 40;
         int poolMinIdlePerKey = 3;

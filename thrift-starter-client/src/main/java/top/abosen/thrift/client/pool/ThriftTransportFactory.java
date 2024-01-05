@@ -19,20 +19,21 @@ import java.net.InetSocketAddress;
 public class ThriftTransportFactory {
 
     private static final int DEFAULT_CONNECT_TIMEOUT = 3000;
+    private static final int DEFAULT_SOCKET_TIMEOUT = 10000;
 
-    public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
+    public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector) {
         TTransport transport;
 
         switch (serviceMode) {
             case SIMPLE:
             case THREAD_POOL:
-                transport = createTSocket(serviceMode, serverNode, connectTimeout, portSelector);
+                transport = createTSocket(serviceMode, serverNode, socketTimeout, connectTimeout, portSelector);
                 break;
 
             case NON_BLOCKING:
             case HS_HA:
             case THREADED_SELECTOR:
-                transport = createTFramedTransport(serviceMode, serverNode, connectTimeout, portSelector);
+                transport = createTFramedTransport(serviceMode, serverNode, socketTimeout, connectTimeout, portSelector);
                 break;
 
             default:
@@ -43,18 +44,24 @@ public class ThriftTransportFactory {
     }
 
     public static TTransport determineTTranport(ServiceMode serviceMode, ThriftServerNode serverNode, PortSelector portSelector) {
-        return determineTTranport(serviceMode, serverNode, DEFAULT_CONNECT_TIMEOUT, portSelector);
+        return determineTTranport(serviceMode, serverNode, DEFAULT_SOCKET_TIMEOUT, DEFAULT_CONNECT_TIMEOUT, portSelector);
     }
 
-    private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
-        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
+    private static TTransport createTSocket(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector) {
+        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(),
+                socketTimeout > 0 ? socketTimeout : DEFAULT_SOCKET_TIMEOUT,
+                connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT
+        );
         tryBindCustomPort(portSelector, tSocket);
         log.debug("Established a new socket transport, service mode is {}", serviceMode);
         return tSocket;
     }
 
-    private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector) {
-        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(), connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
+    private static TTransport createTFramedTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector) {
+        TSocket tSocket = new TSocket(serverNode.getHost(), serverNode.getPort(),
+                socketTimeout > 0 ? socketTimeout : DEFAULT_SOCKET_TIMEOUT,
+                connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT
+        );
         tryBindCustomPort(portSelector, tSocket);
         TTransport transport = new TFastFramedTransport(tSocket);
         log.debug("Established a new framed transport, service mode is {}", serviceMode);

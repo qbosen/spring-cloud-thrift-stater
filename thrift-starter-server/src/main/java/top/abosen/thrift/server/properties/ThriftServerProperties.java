@@ -87,6 +87,9 @@ public class ThriftServerProperties {
         int minWorkerThreads = 5;
         int maxWorkerThreads = 20;
         int keepAliveTime = 60;
+        /**
+         * 小于0时, 使用外部 queueSize 配置; 默认使用外部配置
+         */
         int queueSize = -1;
     }
 
@@ -95,9 +98,15 @@ public class ThriftServerProperties {
         int minWorkerThreads = 5;
         int maxWorkerThreads = 20;
         int keepAliveTime = 300;
+        /**
+         * 小于0时, 使用外部 queueSize 配置; 默认使用外部配置
+         */
         int queueSize = -1;
         int selectorThreads = 2;
         int acceptQueueSizePerThread = 4;
+        /**
+         * tcp三次握手的等待队列大小
+         */
         int backlog = 1024;
     }
 

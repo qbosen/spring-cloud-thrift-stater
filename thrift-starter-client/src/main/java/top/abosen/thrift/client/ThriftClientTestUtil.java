@@ -90,7 +90,7 @@ public class ThriftClientTestUtil {
         ThriftClientConfigure configure = ifaceArgs.getConfigure();
         ServiceSignature serviceSignature = new ServiceSignature(serviceName, clientClass.getEnclosingClass(), Constants.DEFAULT_VERSION);
 
-        TTransport transport = configure.determineTTransport(ifaceArgs.getMode(), configure.chooseServerNode(serviceSignature.getServiceName()), ifaceArgs.getConnectTimeout(), ifaceArgs.getPortConfigure());
+        TTransport transport = configure.determineTTransport(ifaceArgs.getMode(), configure.chooseServerNode(serviceSignature.getServiceName()), ifaceArgs.getSocketTimeout(), ifaceArgs.getConnectTimeout(), ifaceArgs.getPortConfigure());
         TProtocol tProtocol = configure.determineTProtocol(transport, configure.generateSignature(serviceSignature));
         final Object target = constructor.newInstance(tProtocol);
 
@@ -112,6 +112,8 @@ public class ThriftClientTestUtil {
          */
         @Builder.Default
         private int connectTimeout = 30_000;
+        @Builder.Default
+        private int socketTimeout = 30_000;
         /**
          * 使用的端口范围, 默认随机
          */

@@ -36,16 +36,18 @@ public interface ThriftClientConfigure {
      */
     ThriftServerNode chooseServerNode(String serviceName);
 
+
     /**
      * 根据 客户端服务模式配置 和 服务节点信息，创建 TTransport，该对象会被池化缓存
      *
      * @param serviceMode    服务模式
      * @param serverNode     服务节点
+     * @param socketTimeout  socket超时时间 毫秒
      * @param connectTimeout 连接超时时间 毫秒
      * @param portSelector   端口范围配置
      * @return 配置好的 TTransport
      */
-    TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int connectTimeout, PortSelector portSelector);
+    TTransport determineTTransport(ServiceMode serviceMode, ThriftServerNode serverNode, int socketTimeout, int connectTimeout, PortSelector portSelector);
 
     /**
      * 配置协议

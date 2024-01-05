@@ -157,6 +157,7 @@ public class ThriftServerModeManager {
                         .transportFactory(new TFastFramedTransport.Factory())
                         .protocolFactory(new TCompactProtocol.Factory())
                         .selectorThreads(selectorConfig.getSelectorThreads())
+                        // 有 executorService 时, 此配置无效
                         .workerThreads(selectorConfig.getMinWorkerThreads())
                         .acceptQueueSizePerThread(selectorConfig.getAcceptQueueSizePerThread())
                         .executorService(buildThreadPoolExecutor(selectorConfig, properties.getQueueSize(), properties.getServiceName()))
